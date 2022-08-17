@@ -1,0 +1,5 @@
+lxml
+
+# Dev tooling
+flake8
+pytest-cov

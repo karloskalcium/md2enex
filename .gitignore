@@ -1,0 +1,15 @@
+# Python stuff
+.env
+.pytest_cache
+__pycache__/
+ENV/
+
+# test results
+.coverage
+results/
+
+# default output file used in testing
+export.enex
+
+# ide
+.idea
