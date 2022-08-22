@@ -1,5 +1,5 @@
-# html2enex
-`html2enex` is a Python command-line tool that converts a directory of HTML files to an evernote .enex export format. It preserves file titles, creation dates and modification dates.
+# md2enex
+`md2enex` is a Python command-line tool that converts a directory of HTML files to an evernote .enex export format. It preserves file titles, creation dates and modification dates.
 
 This can be used to import files from other tools into Evernote.
 
@@ -10,7 +10,7 @@ it is suggested to export to markdown, then use pandoc to turn markdown into HTM
 ## Install and local development
 
 ### Clone repo
-  `$ git clone https://github.com/karloskalcium/html2enex.git`
+  `$ git clone https://github.com/karloskalcium/md2enex.git`
 
 ### Create and configure virtual environment.
 Make sure you have the correct version of python. [Pyenv](https://github.com/pyenv/pyenv) manages python versions.
@@ -27,8 +27,8 @@ Make sure you have the correct version of python. [Pyenv](https://github.com/pye
 
 ### Run the tool
 ```
-  $ ./html2enex.py -d <directory> -o <output filename>
+  $ ./md2enex.py -d <directory> -o <output filename>
 ```
 
 ## Bugs, feature requests, or contributions
-Open an [Issue](https://github.com/karloskalcium/html2enex/issues). Pull requests welcome.
+Open an [Issue](https://github.com/karloskalcium/md2enex/issues). Pull requests welcome.

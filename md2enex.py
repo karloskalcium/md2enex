@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script to convert all HTML files in provided directory to a single .enex file for importing into Evernote
+Script to convert all markdown files in provided directory to a single .enex file for importing into Evernote
 (c) 2022 Karl Brown
 """
 import argparse
@@ -10,11 +10,12 @@ import os
 import os.path
 from pathlib import Path
 import platform
+import pypandoc
 import sys
 from lxml import etree
 
 
-APP_NAME = 'html2enex'
+APP_NAME = 'md2enex'
 APP_VERSION = '1.0'
 IMPORT_TAG = APP_NAME + '-import'
 
@@ -72,19 +73,25 @@ def process_note(file: str) -> etree.Element:
     note_attributes_el.text = os.linesep
 
     content_text = ''
-    with open(file, "r") as html_file:
-        for index, line in enumerate(html_file):
-            # skip h1 tag from first line, if present
-            if index == 0 and line.strip().startswith('<h1'):
-                continue
-            content_text += line.strip()
+    html_text = pypandoc.convert_file(file, 'html', format='md')
+    print(html_text)
+    index = 0
+    for line in html_text.splitlines():
+        # skip h1 tag from first line, if present
+        if index == 0 and line.strip().startswith('<h1'):
+            print(line.strip())
+            index += 1
+            continue
+        content_text += line.strip()
+        index += 1
 
     content_el = etree.SubElement(note_el, 'content')
-    cdata_prefix = '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+    enml_prefix = '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
     <!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'''
     # Create en-note by hand, as otherwise lxml will escape the content.
     # Add 6 spaces at the end to match Evernote output
-    content_el.text = etree.CDATA(cdata_prefix + '<en-note>' + content_text + '</en-note>' + '      ')
+    enml = enml_prefix + '<en-note>' + content_text + '</en-note>' + '      '
+    content_el.text = etree.CDATA(enml)
 
     return note_el
 
@@ -115,11 +122,10 @@ def make_en_export() -> etree.Element:
 
 def make_enex(target_directory: str, output_file: str):
     os.chdir(target_directory)
-    files = glob.glob('*.html', recursive=False)
-    files.extend(glob.glob('*.htm'))
-    # Ensure at least one html file in directory
+    files = glob.glob('*.md', recursive=False)
+    # Ensure at least one markdown file in directory
     if len(files) <= 0:
-        sys.exit('No HTML files found in ' + target_directory)
+        sys.exit('No markdown files found in ' + target_directory)
 
     # ElementTree object that will contain our xml
     root = make_en_export()
@@ -145,7 +151,7 @@ def main(target_directory: str, output_filename: str):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Converts all HTML files in a directory into a single .enex file for importing to Evernote.')
+        description='Converts all markdown files in a directory into a single .enex file for importing to Evernote.')
     parser.add_argument('-d', '--directory', required=True, action='store',
                         help='Directory to use.')
     parser.add_argument('-o', '--output', required=False, action='store',
