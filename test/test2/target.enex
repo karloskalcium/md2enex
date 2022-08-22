@@ -7,7 +7,6 @@
     <!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd"><en-note><h2 id="header2">header2</h2><p>line one<br />line two</p></en-note>      ]]></content>
     <created>20220818T223312Z</created>
     <updated>20220818T223312Z</updated>
-    <tag>md2enex-import</tag>
     <tag>md2enex-import:2022-08-18T18:36:29</tag>
     <note-attributes>
 </note-attributes>
@@ -18,7 +17,6 @@
     <!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd"><en-note><ul><li>bullet one</li><li>bullet two</li></ul></en-note>      ]]></content>
     <created>20220818T223312Z</created>
     <updated>20220818T223312Z</updated>
-    <tag>md2enex-import</tag>
     <tag>md2enex-import:2022-08-18T18:36:29</tag>
     <note-attributes>
 </note-attributes>
@@ -29,7 +27,6 @@
     <!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd"><en-note><p>paragraph 1</p><p>paragraph 2</p><p><em>italicized text</em></p></en-note>      ]]></content>
     <created>20220818T223312Z</created>
     <updated>20220822T014727Z</updated>
-    <tag>md2enex-import</tag>
     <tag>md2enex-import:2022-08-18T18:36:29</tag>
     <note-attributes>
 </note-attributes>
