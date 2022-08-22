@@ -1,12 +1,20 @@
 # md2enex
-`md2enex` is a Python command-line tool that converts a directory of markdown files to an evernote .enex export format. It preserves file titles, creation dates and modification dates.
+`md2enex` is a Python command-line tool that converts a directory of markdown files to an Evernote `.enex` export format, that can then be imported into Evernote. It preserves file titles, creation dates and modification dates.
 
-This can be used to import files from other tools into Evernote.
+This can be used to import notes from other tools into Evernote.
+
+## Markdown formatting notes
+This tool uses `pandoc` to convert Markdown to HTML, and then embeds that HTML in the enex format created by Evernote. I used [`Exporter`](https://apps.apple.com/us/app/exporter/id1099120373?mt=12) to export notes from Apple Notes app, and since `Exporter` does not add newlines to Markdown, `md2enex` uses the `markdown+hard_line_breaks` option of `pandoc` to ensure proper line spacing; if your Markdown line spacing is correct in the source Markdown files you may want to remove that option in the code.
+
+Additionally, `Exporter` adds the title of the note as a top-level header in the note itself. This is not needed in Evernote, so if the first line of a note is a `<h1>` header, it is removed.
 
 ## Install and local development
 
 ### Clone repo
   `$ git clone https://github.com/karloskalcium/md2enex.git`
+
+### Install pandoc
+  `$ brew install pandoc`
 
 ### Create and configure virtual environment.
 Make sure you have the correct version of python. [Pyenv](https://github.com/pyenv/pyenv) manages python versions.

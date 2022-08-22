@@ -55,8 +55,6 @@ def process_note(file: str) -> etree.Element:
     # just in case, per DTD, title must have no spaces or line endings
     title_el.text = title.strip()
 
-
-
     content_text = ''
     html_text = pypandoc.convert_file(file, 'html', format='markdown+hard_line_breaks', extra_args=['--wrap=none'])
     for index, line in enumerate(html_text.splitlines()):
@@ -128,10 +126,8 @@ def make_enex(target_directory: str, output_file: str):
     # ElementTree object that will contain our xml
     root = make_en_export()
 
-    count = 0
-    for file in files:
+    for count, file in enumerate(files, start=1):
         root.append(process_note(file))
-        count += 1
 
     tree = etree.ElementTree(root)
     doctype = make_enex_doctype()
@@ -146,7 +142,6 @@ def check_dir(target_directory: str):
 
 
 def main(target_directory: str, output_filename: str):
-
     check_dir(target_directory)
     make_enex(target_directory, output_filename)
 
