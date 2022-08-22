@@ -1,4 +1,6 @@
 # test2.3
-multiple lines 
-within a single 
-tag 
+paragraph 1
+
+paragraph 2
+
+*italicized text*

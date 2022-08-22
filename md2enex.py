@@ -41,6 +41,7 @@ def creation_date_seconds(path_to_file):
 
 
 def process_note(file: str) -> etree.Element:
+    print('processing ' + file, flush=True)
     title = Path(file).stem
     creation_date_ts = creation_date_seconds(file)
     creation_date = enex_date_format(datetime.datetime.fromtimestamp(creation_date_ts, tz=datetime.timezone.utc))
@@ -53,6 +54,24 @@ def process_note(file: str) -> etree.Element:
     title_el = etree.SubElement(note_el, 'title')
     # just in case, per DTD, title must have no spaces or line endings
     title_el.text = title.strip()
+
+
+
+    content_text = ''
+    html_text = pypandoc.convert_file(file, 'html', format='markdown+hard_line_breaks', extra_args=['--wrap=none'])
+    for index, line in enumerate(html_text.splitlines()):
+        # skip h1 tag from first line, if present
+        if index == 0 and line.strip().startswith('<h1'):
+            continue
+        content_text += line.strip()
+
+    content_el = etree.SubElement(note_el, 'content')
+    enml_prefix = '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+    <!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'''
+    # Create en-note by hand, as otherwise lxml will escape the content.
+    # Add 6 spaces at the end to match Evernote output
+    enml = enml_prefix + '<en-note>' + content_text + '</en-note>' + '      '
+    content_el.text = etree.CDATA(enml)
 
     created_el = etree.SubElement(note_el, 'created')
     created_el.text = creation_date
@@ -71,27 +90,6 @@ def process_note(file: str) -> etree.Element:
     note_attributes_el = etree.SubElement(note_el, 'note-attributes')
     # to make format match standard Evernote export
     note_attributes_el.text = os.linesep
-
-    content_text = ''
-    html_text = pypandoc.convert_file(file, 'html', format='md')
-    print(html_text)
-    index = 0
-    for line in html_text.splitlines():
-        # skip h1 tag from first line, if present
-        if index == 0 and line.strip().startswith('<h1'):
-            print(line.strip())
-            index += 1
-            continue
-        content_text += line.strip()
-        index += 1
-
-    content_el = etree.SubElement(note_el, 'content')
-    enml_prefix = '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-    <!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'''
-    # Create en-note by hand, as otherwise lxml will escape the content.
-    # Add 6 spaces at the end to match Evernote output
-    enml = enml_prefix + '<en-note>' + content_text + '</en-note>' + '      '
-    content_el.text = etree.CDATA(enml)
 
     return note_el
 
@@ -122,7 +120,7 @@ def make_en_export() -> etree.Element:
 
 def make_enex(target_directory: str, output_file: str):
     os.chdir(target_directory)
-    files = glob.glob('*.md', recursive=False)
+    files = sorted(glob.glob('*.md', recursive=False), key=str.lower)
     # Ensure at least one markdown file in directory
     if len(files) <= 0:
         sys.exit('No markdown files found in ' + target_directory)
@@ -130,12 +128,16 @@ def make_enex(target_directory: str, output_file: str):
     # ElementTree object that will contain our xml
     root = make_en_export()
 
+    count = 0
     for file in files:
         root.append(process_note(file))
+        count += 1
 
     tree = etree.ElementTree(root)
     doctype = make_enex_doctype()
     tree.write(output_file, encoding="UTF-8", method='xml', pretty_print=True, xml_declaration=True, doctype=doctype)
+
+    print('Successfully wrote ' + str(count) + ' markdown files to ' + os.path.join(target_directory, output_file))
 
 
 def check_dir(target_directory: str):
