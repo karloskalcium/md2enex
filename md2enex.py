@@ -6,6 +6,7 @@ Script to convert all markdown files in provided directory to a single .enex fil
 import argparse
 import datetime
 import glob
+from inspect import getsourcefile
 import os
 import os.path
 from pathlib import Path
@@ -13,14 +14,14 @@ import platform
 import pypandoc
 import sys
 from lxml import etree
+from urllib.request import pathname2url
 
 
 APP_NAME = 'md2enex'
 APP_VERSION = '1.0'
 IMPORT_TAG_WITH_DATETIME = APP_NAME + '-import' + ":" + datetime.datetime.now().isoformat(timespec='seconds')
 ENEX_DOCTYPE = '<!DOCTYPE en-export SYSTEM "http://xml.evernote.com/pub/evernote-export4.dtd">'
-ENML_PREFIX = '''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-                 <!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'''
+ENML_DOCTYPE = '<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'
 
 
 # stolen from https://stackoverflow.com/a/39501288/4907881
@@ -81,31 +82,52 @@ def create_note_attributes() -> etree.Element:
     return note_attributes_el
 
 
+def set_catalog_var():
+    # Sets the XML_CATALOG_FILES variable to our catalog.xml, that points to local cache of DTDs
+    # cribbed from https://stackoverflow.com/a/18489147/
+    current_abs_path = os.path.dirname(os.path.abspath(getsourcefile(lambda: 0)))
+    catalog_path = f"file://{pathname2url(os.path.join(current_abs_path, 'xml_cache/catalog.xml'))}"
+    # Set up environment variable for local catalog cache
+    os.environ['XML_CATALOG_FILES'] = catalog_path
+
+
+def strip_note_el(en_note_el: etree.Element) -> etree.Element:
+    etree.strip_attributes(en_note_el, 'id', 'class', 'data', 'data-cites')
+
+
+def validate_note_xml(note_xml: bytes):
+    # For speed, access all XML from local XML CATALOG
+    parser = etree.XMLParser(dtd_validation=True, no_network=True)
+    etree.fromstring(note_xml, parser=parser)
+
+
 def create_note_content(file: str) -> etree.Element:
     content_text = ''
     # set hard_line_breaks here b/c the Exporter on OSX doesn't add proper line breaks in the Markdown export
-    html_text = pypandoc.convert_file(file, 'html', format='markdown+hard_line_breaks', extra_args=['--wrap=none'])
+    html_text = pypandoc.convert_file(file, 'html', format='markdown+hard_line_breaks-smart-auto_identifiers',
+                                      extra_args=['--wrap=none'])
     for index, line in enumerate(html_text.splitlines()):
         line_trimmed = line.strip()
         # skip h1 tag from first line, if present, as this is likely the title
         if index == 0 and line_trimmed.startswith('<h1'):
             continue
-        if line_trimmed.startswith('<figure') or line_trimmed.startswith('<img'):
-            print("Skipped " + file + " because of unsupported figure/image tags.")
-            return None
         content_text += line_trimmed
 
-    # Create en-note by hand, as otherwise lxml will escape the content.
-    # Add 6 spaces at the end to match Evernote output
-    enml = ENML_PREFIX + '<en-note>' + content_text + '</en-note>' + '      '
+    en_note_el = etree.XML(f'<en-note>{content_text}</en-note>')
+    strip_note_el(en_note_el)
+    en_note_bytes = etree.tostring(en_note_el, encoding='UTF-8', method="xml", xml_declaration=True,
+                                   pretty_print=False, standalone=False, doctype=ENML_DOCTYPE)
+
+    validate_note_xml(en_note_bytes)
 
     content_el = etree.Element('content')
-    content_el.text = etree.CDATA(enml)
+    content_el.text = etree.CDATA(en_note_bytes.decode('utf-8'))
+
     return content_el
 
 
 def process_note(file: str) -> etree.Element:
-    print('processing ' + file, flush=True)
+    # print('processing ' + file, flush=True)
     note_el = etree.Element('note')
 
     note_el.append(create_title(file))
@@ -137,7 +159,7 @@ def create_en_export() -> etree.Element:
     return en_export
 
 
-def make_enex(target_directory: str, output_file: str):
+def write_enex(target_directory: str, output_file: str):
     os.chdir(target_directory)
     files = sorted(glob.glob('*.md', recursive=False), key=str.lower)
     # Ensure at least one markdown file in directory
@@ -148,10 +170,15 @@ def make_enex(target_directory: str, output_file: str):
     root = create_en_export()
 
     for count, file in enumerate(files, start=1):
-        root.append(process_note(file))
+        try:
+            root.append(process_note(file))
+        except Exception as e:
+            print("Oops!", e.__class__, "occurred with file " + file)
+            print(e)
 
     tree = etree.ElementTree(root)
-    tree.write(output_file, encoding="UTF-8", method='xml', pretty_print=True, xml_declaration=True, doctype=ENEX_DOCTYPE)
+    tree.write(output_file, encoding="UTF-8", method='xml', pretty_print=True,
+               xml_declaration=True, doctype=ENEX_DOCTYPE)
 
     print('Successfully wrote ' + str(count) + ' markdown files to ' + os.path.join(target_directory, output_file))
 
@@ -162,8 +189,9 @@ def check_dir(target_directory: str):
 
 
 def main(target_directory: str, output_filename: str):
+    set_catalog_var()
     check_dir(target_directory)
-    make_enex(target_directory, output_filename)
+    write_enex(target_directory, output_filename)
 
 
 if __name__ == '__main__':
