@@ -7,6 +7,7 @@ import argparse
 import datetime
 import glob
 from inspect import getsourcefile
+import logging
 import os
 import os.path
 from pathlib import Path
@@ -101,6 +102,11 @@ def validate_note_xml(note_xml: bytes):
     etree.fromstring(note_xml, parser=parser)
 
 
+def check_invalid_tags(en_note_el: etree.Element):
+    if len(en_note_el.findall('.//img')) or len(en_note_el.findall('.//figure')):
+        raise etree.LxmlSyntaxError("Found invalid tags - skipping...")
+
+
 def create_note_content(file: str) -> etree.Element:
     content_text = ''
     # set hard_line_breaks here b/c the Exporter on OSX doesn't add proper line breaks in the Markdown export
@@ -119,6 +125,7 @@ def create_note_content(file: str) -> etree.Element:
                                    pretty_print=False, standalone=False, doctype=ENML_DOCTYPE)
 
     validate_note_xml(en_note_bytes)
+    check_invalid_tags(en_note_el)
 
     content_el = etree.Element('content')
     content_el.text = etree.CDATA(en_note_bytes.decode('utf-8'))
@@ -128,6 +135,7 @@ def create_note_content(file: str) -> etree.Element:
 
 def process_note(file: str) -> etree.Element:
     # print('processing ' + file, flush=True)
+    # print('.', end='', flush=True)
     note_el = etree.Element('note')
 
     note_el.append(create_title(file))
@@ -169,18 +177,24 @@ def write_enex(target_directory: str, output_file: str):
     # ElementTree object that will contain our xml
     root = create_en_export()
 
-    for count, file in enumerate(files, start=1):
+    count = 0
+    error_list = []
+    for file in files:
         try:
             root.append(process_note(file))
-        except Exception as e:
-            print("Oops!", e.__class__, "occurred with file " + file)
-            print(e)
+            count += 1
+        except (etree.LxmlError, ValueError) as e:
+            error_list.append(file)
+            logging.warning("Parsing error " + str(e.__class__) + " occurred with file " + file)
+            logging.warning(e)
 
     tree = etree.ElementTree(root)
     tree.write(output_file, encoding="UTF-8", method='xml', pretty_print=True,
                xml_declaration=True, doctype=ENEX_DOCTYPE)
 
     print('Successfully wrote ' + str(count) + ' markdown files to ' + os.path.join(target_directory, output_file))
+    if (len(error_list) > 0):
+        logging.warning("Some files were skipped - these need to be cleaned up manually and reimported: " + str(error_list))
 
 
 def check_dir(target_directory: str):

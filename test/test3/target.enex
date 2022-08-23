@@ -3,22 +3,22 @@
 <en-export export-date="20220822T031605Z" application="md2enex" version="1.0">
   <note>
     <title>test3 -</title>
-    <content><![CDATA[<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-    <!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd"><en-note><p>testing 123</p></en-note>      ]]></content>
+    <content><![CDATA[<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">
+<en-note><p>testing 123</p></en-note>]]></content>
     <created>20220822T021534Z</created>
     <updated>20220822T021645Z</updated>
-    <tag>md2enex-import</tag>
     <tag>md2enex-import:2022-08-21T23:16:05</tag>
     <note-attributes>
 </note-attributes>
   </note>
   <note>
     <title>xxx</title>
-    <content><![CDATA[<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-    <!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd"><en-note><p>test odd characters</p></en-note>      ]]></content>
+    <content><![CDATA[<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">
+<en-note><p>test odd characters<br/>'quotes'<br/>"double quotes"<br/>éá &lt;- accents<br/><code>backticks</code></p></en-note>]]></content>
     <created>20220822T021930Z</created>
     <updated>20220822T031227Z</updated>
-    <tag>md2enex-import</tag>
     <tag>md2enex-import:2022-08-21T23:16:05</tag>
     <note-attributes>
 </note-attributes>
