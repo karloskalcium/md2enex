@@ -194,7 +194,8 @@ def write_enex(target_directory: str, output_file: str):
 
     print('Successfully wrote ' + str(count) + ' markdown files to ' + os.path.join(target_directory, output_file))
     if (len(error_list) > 0):
-        logging.warning("Some files were skipped - these need to be cleaned up manually and reimported: " + str(error_list))
+        logging.warning("Some files were skipped - these need to be cleaned up manually and reimported: "
+                        + str(error_list))
 
 
 def check_dir(target_directory: str):
