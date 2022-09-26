@@ -42,3 +42,7 @@ Make sure you have the correct version of python. [Pyenv](https://github.com/pye
 
 ## Bugs, feature requests, or contributions
 Open an [Issue](https://github.com/karloskalcium/md2enex/issues). Pull requests welcome.
+
+## Other tools
+* https://github.com/akosbalasko/yarle  "Yarle - The ultimate converter of Evernote notes to Markdown"
+* https://github.com/wormi4ok/evernote2md "Convert Evernote .enex files to Markdown"
