@@ -45,3 +45,7 @@ This does not currently work recursively, so all files must be in the top-level 
 
 ## Bugs, feature requests, or contributions
 Open an [Issue](https://github.com/karloskalcium/md2enex/issues). Pull requests welcome.
+
+## Other tools
+* https://github.com/akosbalasko/yarle  "Yarle - The ultimate converter of Evernote notes to Markdown"
+* https://github.com/wormi4ok/evernote2md "Convert Evernote .enex files to Markdown"
