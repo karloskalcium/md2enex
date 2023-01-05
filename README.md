@@ -40,5 +40,8 @@ Make sure you have the correct version of python. [Pyenv](https://github.com/pye
   $ ./md2enex.py -d <directory> -o <output filename>
 ```
 
+Note: <directory> should be a directory containing all of the .md files you want to import.
+This does not currently work recursively, so all files must be in the top-level of the directory.
+
 ## Bugs, feature requests, or contributions
 Open an [Issue](https://github.com/karloskalcium/md2enex/issues). Pull requests welcome.
