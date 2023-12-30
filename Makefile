@@ -15,9 +15,9 @@ help:  ## Prints out documentation for available commands
 
 ## Pip / Python
 
-.PHONY: python-install
-# python-install recipe all has to run in a single shell because it's running inside a virtualenv
-python-install:  requirements.txt  ## Sets up your python environment for the first time (only need to run once)
+.PHONY: virtualenv-install
+# virtualenv-install recipe all has to run in a single shell because it's running inside a virtualenv
+virtualenv-install:  requirements.txt  ## Sets up your python environment for the first time (only need to run once)
 	pip install virtualenv ;\
 	virtualenv ENV ;\
 	source ENV/bin/activate ;\
@@ -49,8 +49,9 @@ pip-install: $(SITE_PACKAGES)  ## install python packages
 
 ## Test targets
 .PHONY: unit-test
-unit-test: pip-install  ## Run python unit tests
-	python -m pytest -v --cov --cov-report term --cov-report xml --cov-report html
+unit-test: pip-install  ## Run python unit tests (not implemented yet)
+	echo "Unit tests not yet implemented"
+	# python -m pytest -v --cov --cov-report term --cov-report xml --cov-report html
 
 .PHONY: flake8
 flake8: pip-install 	## Run Flake8 python static style checking and linting

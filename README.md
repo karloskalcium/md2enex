@@ -6,7 +6,7 @@ This can be used to import notes from other tools into Evernote.
 ## Markdown formatting notes
 This tool uses [`pandoc`](https://pandoc.org/) to convert Markdown to HTML, and then converts that HTML to [ENML](http://xml.evernote.com/pub/enml2.dtd) (stripping some tags in the process), and then embeds this into the [ENEX](http://xml.evernote.com/pub/evernote-export4.dtd) import/export format created by Evernote.
 
-I used [`Exporter`](https://apps.apple.com/us/app/exporter/id1099120373?mt=12) to export notes from Apple Notes app, and since `Exporter` does not add newlines to Markdown, `md2enex` uses the `markdown+hard_line_breaks` option of `pandoc` to ensure proper line spacing; if your Markdown line spacing is correct in the source Markdown files you may want to remove that option in the code.
+I used [`Exporter`](http://falcon.star-lord.me/exporter/) to export notes from Apple Notes app, and since `Exporter` does not add newlines to Markdown, `md2enex` uses the `markdown+hard_line_breaks` option of `pandoc` to ensure proper line spacing; if your Markdown line spacing is correct in the source Markdown files you may want to remove that option in the code.
 
 Additionally, `Exporter` adds the title of the note as a top-level header in the note itself. This is not needed in Evernote, so if the first line of a note is a `<h1>` header, it is removed.
 
@@ -16,35 +16,42 @@ A warning: Evernote can be finicky about notes; I have noticed that if notes hav
 
 ## Install and run
 
+### OSX: Install dependencies
+1. Install [homebrew](https://brew.sh/)
+2. Install pandoc:
+  `brew install pandoc`
+3. Install pyenv or another python version manager so you can install the correct version of python
+  `brew install pyenv`
+
 ### Clone repo
-  `$ git clone https://github.com/karloskalcium/md2enex.git`
+1. `git clone https://github.com/karloskalcium/md2enex.git`
+2. `cd md2enex`
 
-### Install pandoc
-  `$ brew install pandoc`
-
-### Create and configure virtual environment.
-Make sure you have the correct version of python. [Pyenv](https://github.com/pyenv/pyenv) manages python versions.
-  1. `pyenv install 3.10.6` (use version in `.python-version`)
+### Install the right version of python.
+Make sure you have the correct version of python (3.10.13). You can use [Pyenv](https://github.com/pyenv/pyenv) to manage python versions. You can also try with the default python3 installed by your OS, or directly install 3.10.13.
+  1. `pyenv install 3.10.13` (use version in `.python-version`)
   2. Make sure to configure your shell's environment for pyenv following instructions in step 2
     [here](https://github.com/pyenv/pyenv#basic-github-checkout).
-  3. Once this is done, start a new shell and run `pyenv version` and `python --version` in the terminal from the root directory of the project, both should read `3.10.6`
+  3. Once this is done, start a new shell and run `pyenv version` and `python --version` in the terminal from the root directory of the project, both should read `3.10.13`
 
-### *nix / OSX
- ```
-  $ make python-install
-  $ source ENV/bin/activate
- ```
+#### Create the Python virtual environment
+1. `make virtualenv-install`
+2. `source ENV/bin/activate`
 
 ### Run the tool
 ```
-  $ ./md2enex.py -d <directory> -o <output filename>
+  ./md2enex.py -d <directory> -o <output filename>
 ```
 
 Note: `directory` should be a directory containing all of the .md files you want to import.
 This does not currently work recursively, so all files must be in the top-level of the directory.
 
+The resultant `.enex` file can be imported into Evernote using the import feature.
+
 ## Bugs, feature requests, or contributions
-Open an [Issue](https://github.com/karloskalcium/md2enex/issues). Pull requests welcome.
+Open an [Issue](https://github.com/karloskalcium/md2enex/issues). Pull requests welcome. 
+
+You can also ask a question in the [discussions section](https://github.com/karloskalcium/md2enex/discussions).
 
 ## Other tools
 * https://github.com/akosbalasko/yarle  "Yarle - The ultimate converter of Evernote notes to Markdown"
