@@ -1,12 +1,16 @@
 ---
+default_language_version:
+  python: python3.10
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
+    rev: 2c9f875913ee60ca25ce70243dc24d5b6415598c  # frozen: v4.6.0
     hooks:
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
       - id: trailing-whitespace
 
   - repo: https://github.com/executablebooks/mdformat
-    rev: 0.7.16
+    rev: 08fba30538869a440b5059de90af03e3502e35fb  # frozen: 0.7.17
     hooks:
       - id: mdformat
         additional_dependencies:

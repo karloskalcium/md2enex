@@ -18,6 +18,36 @@ pytest-cov = "^5.0.0"
 [tool.poetry.scripts]
 md2enex = "md2enex.md2enex:main"
 
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+# linting
+[tool.ruff.lint]
+select = [
+    # flake8-comprehensions
+    "C4",
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-pytest
+    "PT",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+]
+
+# testing
 [tool.coverage.run]
 branch = true
 source = [
@@ -56,7 +86,3 @@ output = "results/coverage/pytest-coverage.xml"
 # Output test results to junit.xml
 addopts = "--tb=short -ra --junitxml=results/unit/pytest-unit.xml --color=yes"
 testpaths = "tests"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
