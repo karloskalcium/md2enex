@@ -1,0 +1,62 @@
+[tool.poetry]
+name = "md2enex"
+version = "0.2"
+description = "Converts markdown to Evernote ENEX files so they can be imported"
+authors = ["karloskalcium"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+lxml = "^5.2.1"
+pypandoc = "^1.13"
+click = "^8.1.7"
+
+[tool.poetry.group.dev.dependencies]
+pytest-cov = "^5.0.0"
+
+[tool.poetry.scripts]
+md2enex = "md2enex.md2enex:main"
+
+[tool.coverage.run]
+branch = true
+source = [
+    "md2enex",
+]
+omit = [
+    "**/tests/*",
+    "**/test_*",
+    "**/conftest*",
+    "**/__init__.py",
+    "**/__main__.py",
+]
+
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_also = [
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    "if __name__ == .__main__.:",
+]
+
+ignore_errors = true
+
+[tool.coverage.html]
+directory = "results/coverage"
+
+[tool.coverage.xml]
+output = "results/coverage/pytest-coverage.xml"
+
+[tool.pytest.ini_options]
+# Show extra test summary info as specified by chars (a)ll except passed
+# Output test results to junit.xml
+addopts = "--tb=short -ra --junitxml=results/unit/pytest-unit.xml --color=yes"
+testpaths = "tests"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
 Script to convert all markdown files in provided directory to a single .enex file for importing into Evernote
-(c) 2022 Karl Brown
+(c) 2022, 2023, 2024 Karl Brown
 """
-import argparse
+import click
 import datetime
 import glob
 from inspect import getsourcefile
@@ -19,7 +19,7 @@ from urllib.request import pathname2url
 
 
 APP_NAME = 'md2enex'
-APP_VERSION = '1.0'
+APP_VERSION = '0.2'
 IMPORT_TAG_WITH_DATETIME = APP_NAME + '-import' + ":" + datetime.datetime.now().isoformat(timespec='seconds')
 ENEX_DOCTYPE = '<!DOCTYPE en-export SYSTEM "http://xml.evernote.com/pub/evernote-export4.dtd">'
 ENML_DOCTYPE = '<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'
@@ -87,7 +87,7 @@ def set_catalog_var():
     # Sets the XML_CATALOG_FILES variable to our catalog.xml, that points to local cache of DTDs
     # cribbed from https://stackoverflow.com/a/18489147/
     current_abs_path = os.path.dirname(os.path.abspath(getsourcefile(lambda: 0)))
-    catalog_path = f"file://{pathname2url(os.path.join(current_abs_path, 'xml_cache/catalog.xml'))}"
+    catalog_path = f"file://{pathname2url(os.path.join(current_abs_path, '../xml_cache/catalog.xml'))}"
     # Set up environment variable for local catalog cache
     os.environ['XML_CATALOG_FILES'] = catalog_path
 
@@ -167,7 +167,7 @@ def create_en_export() -> etree.Element:
     return en_export
 
 
-def write_enex(target_directory: str, output_file: str):
+def write_enex(target_directory: str, output_file: click.File):
     os.chdir(target_directory)
     files = sorted(glob.glob('*.md', recursive=False), key=str.lower)
     # Ensure at least one markdown file in directory
@@ -203,19 +203,17 @@ def check_dir(target_directory: str):
         sys.exit("Invalid directory: " + target_directory)
 
 
-def main(target_directory: str, output_filename: str):
+@click.command()
+@click.argument("directory", required=True, type=click.Path(exists=True, file_okay=False, dir_okay=True, readable=True,
+                                                            path_type=None))
+@click.option("--output", "-o", default="export.enex", required=False, type=click.File(mode='w'),
+              help="Output file name. Existing file will be overwritten. Default: export.enex")
+def main(directory: str, output: click.File):
+    """Converts all markdown files in a directory into a single .enex file for importing to Evernote."""
     set_catalog_var()
-    check_dir(target_directory)
-    write_enex(target_directory, output_filename)
+    check_dir(directory)
+    write_enex(directory, output)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Converts all markdown files in a directory into a single .enex file for importing to Evernote.')
-    parser.add_argument('-d', '--directory', required=True, action='store',
-                        help='Directory to use.')
-    parser.add_argument('-o', '--output', required=False, action='store',
-                        default='export.enex',
-                        help='Output file name. Existing file will be overwritten. Default: export.enex')
-    args = parser.parse_args()
-    main(args.directory, args.output)
+    main()

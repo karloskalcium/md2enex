@@ -1,6 +1,0 @@
-lxml
-pypandoc
-
-# Dev tooling
-flake8
-pytest-cov
