@@ -1,12 +1,12 @@
 <!--
 
    Evernote Markup Language (ENML) 2.0 DTD
-   
+
    This expresses the structure of an XML document that can be used as the
    'content' of a Note within Evernote's data model.
    The Evernote service will reject attempts to create or update notes if
    their contents do not validate against this DTD.
-   
+
    This is based on a subset of XHTML which is intentionally broadened to
    reject less real-world HTML, to reduce the likelihood of synchronization
    failures.  This means that all attributes are defined as CDATA instead of
@@ -40,13 +40,13 @@
 
 <!ENTITY % coreattrs
  "style       CDATA #IMPLIED
-  title       CDATA #IMPLIED" 
+  title       CDATA #IMPLIED"
   >
 
 <!ENTITY % i18n
  "lang        CDATA #IMPLIED
   xml:lang    CDATA #IMPLIED
-  dir         CDATA #IMPLIED" 
+  dir         CDATA #IMPLIED"
   >
 
 <!ENTITY % focus
@@ -59,8 +59,8 @@
   %i18n;"
   >
 
-<!ENTITY % TextAlign 
- "align       CDATA #IMPLIED" 
+<!ENTITY % TextAlign
+ "align       CDATA #IMPLIED"
   >
 
 <!ENTITY % cellhalign
@@ -74,7 +74,7 @@
   >
 
 <!ENTITY % AnyContent
- "( #PCDATA | 
+ "( #PCDATA |
   a |
   abbr |
   acronym |
@@ -137,7 +137,7 @@
   tt |
   u |
   ul |
-  var )*" 
+  var )*"
   >
 
 <!--=========== Evernote-specific Elements and Attributes ===============-->
@@ -208,7 +208,7 @@
 
 <!ELEMENT address %AnyContent;>
 <!ATTLIST address
-  %attrs; 
+  %attrs;
   >
 
 <!ELEMENT area %AnyContent;>
@@ -224,7 +224,7 @@
   >
 
 <!ELEMENT b %AnyContent;>
-<!ATTLIST b 
+<!ATTLIST b
   %attrs;
   >
 
@@ -237,7 +237,7 @@
   >
 
 <!ELEMENT big %AnyContent;>
-<!ATTLIST big 
+<!ATTLIST big
   %attrs;
   >
 
@@ -260,17 +260,17 @@
   >
 
 <!ELEMENT center %AnyContent;>
-<!ATTLIST center 
+<!ATTLIST center
   %attrs;
   >
 
 <!ELEMENT cite %AnyContent;>
-<!ATTLIST cite 
-  %attrs; 
+<!ATTLIST cite
+  %attrs;
   >
 
 <!ELEMENT code %AnyContent;>
-<!ATTLIST code 
+<!ATTLIST code
   %attrs;
   >
 
@@ -293,7 +293,7 @@
   >
 
 <!ELEMENT dd %AnyContent;>
-<!ATTLIST dd 
+<!ATTLIST dd
   %attrs;
   >
 
@@ -305,7 +305,7 @@
   >
 
 <!ELEMENT dfn %AnyContent;>
-<!ATTLIST dfn 
+<!ATTLIST dfn
   %attrs;
   >
 
@@ -322,12 +322,12 @@
   >
 
 <!ELEMENT dt %AnyContent;>
-<!ATTLIST dt 
-  %attrs; 
+<!ATTLIST dt
+  %attrs;
   >
 
 <!ELEMENT em %AnyContent;>
-<!ATTLIST em 
+<!ATTLIST em
   %attrs;
   >
 
@@ -386,7 +386,7 @@
   >
 
 <!ELEMENT i %AnyContent;>
-<!ATTLIST i 
+<!ATTLIST i
   %attrs;
   >
 
@@ -415,7 +415,7 @@
   >
 
 <!ELEMENT kbd %AnyContent;>
-<!ATTLIST kbd 
+<!ATTLIST kbd
   %attrs;
   >
 
@@ -461,7 +461,7 @@
   >
 
 <!ELEMENT s %AnyContent;>
-<!ATTLIST s 
+<!ATTLIST s
   %attrs;
   >
 

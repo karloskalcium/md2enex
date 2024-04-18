@@ -1,8 +1,7 @@
 # -==
+
 test odd characters
 'quotes'
 "double quotes"
-éá <- accents
+éá \<- accents
 `backticks`
-
-
