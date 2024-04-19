@@ -10,13 +10,13 @@ readme = "README.md"
 python = "^3.10"
 lxml = "^5.2.1"
 pypandoc = "^1.13"
-click = "^8.1.7"
+typer = "^0.12.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest-cov = "^5.0.0"
 
 [tool.poetry.scripts]
-md2enex = "md2enex.md2enex:main"
+md2enex = "md2enex.md2enex:app"
 
 [build-system]
 requires = ["poetry-core"]

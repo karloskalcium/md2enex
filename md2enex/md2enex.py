@@ -5,25 +5,39 @@ Script to convert all markdown files in provided directory to a single .enex fil
 """
 
 import datetime
-import glob
+import importlib.metadata
 import logging
 import os
 import os.path
+import pathlib
 import platform
-import sys
+from enum import Enum
 from inspect import getsourcefile
 from pathlib import Path
+from typing import Annotated, Optional
 from urllib.request import pathname2url
 
-import click
 import pypandoc
+import typer
 from lxml import etree
 
-APP_NAME = "md2enex"
-APP_VERSION = "0.2"
-IMPORT_TAG_WITH_DATETIME = APP_NAME + "-import" + ":" + datetime.datetime.now().isoformat(timespec="seconds")
-ENEX_DOCTYPE = '<!DOCTYPE en-export SYSTEM "http://xml.evernote.com/pub/evernote-export4.dtd">'
-ENML_DOCTYPE = '<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'
+
+# Enum for App Configuration Constants with functions
+class Appconfig(Enum):
+    APP_NAME = "md2enex"
+    APP_VERSION = importlib.metadata.version("md2enex")
+
+
+class Doctypes(Enum):
+    ENEX_DOCTYPE = '<!DOCTYPE en-export SYSTEM "http://xml.evernote.com/pub/evernote-export4.dtd">'
+    ENML_DOCTYPE = '<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'
+
+
+IMPORT_TAG_WITH_DATETIME = (
+    Appconfig.APP_NAME.value + "-import" + ":" + datetime.datetime.now().isoformat(timespec="seconds")
+)
+
+app = typer.Typer(add_completion=False)
 
 
 # stolen from https://stackoverflow.com/a/39501288/4907881
@@ -106,7 +120,7 @@ def validate_note_xml(note_xml: bytes):
 
 def check_invalid_tags(en_note_el: etree.Element):
     if len(en_note_el.findall(".//img")) or len(en_note_el.findall(".//figure")):
-        raise etree.LxmlSyntaxError("Found invalid tags - skipping...")
+        raise etree.LxmlSyntaxError("Found image tags - skipping...")
 
 
 def create_note_content(file: str) -> etree.Element:
@@ -131,7 +145,7 @@ def create_note_content(file: str) -> etree.Element:
         xml_declaration=True,
         pretty_print=False,
         standalone=False,
-        doctype=ENML_DOCTYPE,
+        doctype=Doctypes.ENML_DOCTYPE.value,
     )
 
     validate_note_xml(en_note_bytes)
@@ -144,8 +158,6 @@ def create_note_content(file: str) -> etree.Element:
 
 
 def process_note(file: str) -> etree.Element:
-    # print('processing ' + file, flush=True)
-    # print('.', end='', flush=True)
     note_el = etree.Element("note")
 
     note_el.append(create_title(file))
@@ -172,17 +184,17 @@ def create_en_export() -> etree.Element:
     now_str = enex_date_format(now)
     en_export = etree.Element("en-export")
     en_export.set("export-date", now_str)
-    en_export.set("application", APP_NAME)
-    en_export.set("version", APP_VERSION)
+    en_export.set("application", Appconfig.APP_NAME.value)
+    en_export.set("version", Appconfig.APP_VERSION.value)
     return en_export
 
 
-def write_enex(target_directory: str, output_file: click.File):
-    os.chdir(target_directory)
-    files = sorted(glob.glob("*.md", recursive=False), key=str.lower)
+def write_enex(target_directory: pathlib.Path, output_file: str):
+    files = sorted(target_directory.glob("*.md"), key=lambda fn: str.lower(fn.name))
     # Ensure at least one markdown file in directory
     if len(files) <= 0:
-        sys.exit("No markdown files found in " + target_directory)
+        typer.echo("No markdown files found in " + target_directory.name, err=True)
+        raise typer.Exit(code=1)
 
     # ElementTree object that will contain our xml
     root = create_en_export()
@@ -190,51 +202,61 @@ def write_enex(target_directory: str, output_file: click.File):
     count = 0
     error_list = []
     for file in files:
+        filename = str(file)
         try:
-            root.append(process_note(file))
+            root.append(process_note(filename))
             count += 1
         except (etree.LxmlError, ValueError) as e:
-            error_list.append(file)
-            logging.warning("Parsing error " + str(e.__class__) + " occurred with file " + file)
+            error_list.append(filename)
+            logging.warning("Parsing error " + str(e.__class__) + " occurred with file " + filename)
             logging.warning(e)
 
     tree = etree.ElementTree(root)
     tree.write(
-        output_file, encoding="UTF-8", method="xml", pretty_print=True, xml_declaration=True, doctype=ENEX_DOCTYPE
+        output_file,
+        encoding="UTF-8",
+        method="xml",
+        pretty_print=True,
+        xml_declaration=True,
+        doctype=Doctypes.ENEX_DOCTYPE.value,
     )
 
-    print("Successfully wrote " + str(count) + " markdown files to " + os.path.join(target_directory, output_file))
+    typer.echo("Successfully wrote " + str(count) + " markdown files to " + output_file)
     if len(error_list) > 0:
         logging.warning(
             "Some files were skipped - these need to be cleaned up manually and reimported: " + str(error_list)
         )
 
 
-def check_dir(target_directory: str):
-    if not os.path.isdir(target_directory):
-        sys.exit("Invalid directory: " + target_directory)
+def version_callback(value: bool):
+    if value:
+        typer.echo(Appconfig.APP_NAME.value + " (version " + Appconfig.APP_VERSION.value + ")")
+        raise typer.Exit(code=0)
 
 
-@click.command()
-@click.argument(
-    "directory",
-    required=True,
-    type=click.Path(exists=True, file_okay=False, dir_okay=True, readable=True, path_type=None),
-)
-@click.option(
-    "--output",
-    "-o",
-    default="export.enex",
-    required=False,
-    type=click.File(mode="w"),
-    help="Output file name. Existing file will be overwritten. Default: export.enex",
-)
-def main(directory: str, output: click.File):
+@app.command()
+def main(
+    directory: Annotated[Path, typer.Argument(exists=True, dir_okay=True, path_type=pathlib.Path)],
+    output: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            "-o",
+            exists=False,
+            dir_okay=False,
+            path_type=pathlib.Path,
+            help="Output file name. Existing file will be overwritten.",
+        ),
+    ] = "export.enex",
+    version: Annotated[
+        Optional[bool],  # noqa: UP007
+        typer.Option("--version", "-v", callback=version_callback, help="Program version number"),
+    ] = None,
+):
     """Converts all markdown files in a directory into a single .enex file for importing to Evernote."""
     set_catalog_var()
-    check_dir(directory)
-    write_enex(directory, output)
+    write_enex(directory, str(output))
 
 
 if __name__ == "__main__":
-    main()
+    app()
