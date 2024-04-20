@@ -12,5 +12,8 @@ export.enex
 # install stamp used for makefile
 .install.stamp
 
+# dist file build
+dist/
+
 # IDE
 .idea

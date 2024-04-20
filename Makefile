@@ -38,7 +38,8 @@ format: $(INSTALL_STAMP)  ## Format code base
 .PHONY: clean
 clean:  ## Delete any directories, files or logs that are auto-generated
 	find . -type d -name "__pycache__" | xargs rm -rf {};
-	rm -rf .install.stamp .coverage results
+	rm -f .install.stamp .coverage
+	rm -rf results dist .ruff_cache .pytest_cache
 
 .PHONY: deepclean
 deepclean: clean  ## Delete all poetry environments

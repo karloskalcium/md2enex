@@ -103,7 +103,8 @@ def set_catalog_var():
     # Sets the XML_CATALOG_FILES variable to our catalog.xml, that points to local cache of DTDs
     # cribbed from https://stackoverflow.com/a/18489147/
     current_abs_path = os.path.dirname(os.path.abspath(getsourcefile(lambda: 0)))
-    catalog_path = f"file://{pathname2url(os.path.join(current_abs_path, '../xml_cache/catalog.xml'))}"
+    catalog_path = f"file://{pathname2url(os.path.join(current_abs_path, 'xml_cache/catalog.xml'))}"
+    print(catalog_path)
     # Set up environment variable for local catalog cache
     os.environ["XML_CATALOG_FILES"] = catalog_path
 
@@ -236,7 +237,7 @@ def version_callback(value: bool):
 
 @app.command()
 def cli(
-    directory: Annotated[Path, typer.Argument(exists=True, dir_okay=True, path_type=pathlib.Path)],
+    directory: Annotated[Path, typer.Argument(exists=True, file_okay=False, dir_okay=True, path_type=pathlib.Path)],
     output: Annotated[
         Path,
         typer.Option(
@@ -260,3 +261,8 @@ def cli(
 
 def main():
     app()
+
+
+# needed so we can invoke within IDE
+if __name__ == "__main__":
+    main()
