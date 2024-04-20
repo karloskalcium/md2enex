@@ -9,5 +9,8 @@ results/
 # default output file used in testing
 export.enex
 
-# ide
+# install stamp used for makefile
+.install.stamp
+
+# IDE
 .idea

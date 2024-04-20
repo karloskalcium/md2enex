@@ -16,7 +16,7 @@ typer = "^0.12.3"
 pytest-cov = "^5.0.0"
 
 [tool.poetry.scripts]
-md2enex = "md2enex.md2enex:app"
+md2enex = "md2enex.md2enex:main"
 
 [build-system]
 requires = ["poetry-core"]
@@ -77,9 +77,6 @@ ignore_errors = true
 
 [tool.coverage.html]
 directory = "results/coverage"
-
-[tool.coverage.xml]
-output = "results/coverage/pytest-coverage.xml"
 
 [tool.pytest.ini_options]
 # Show extra test summary info as specified by chars (a)ll except passed

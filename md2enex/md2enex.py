@@ -235,7 +235,7 @@ def version_callback(value: bool):
 
 
 @app.command()
-def main(
+def cli(
     directory: Annotated[Path, typer.Argument(exists=True, dir_okay=True, path_type=pathlib.Path)],
     output: Annotated[
         Path,
@@ -258,5 +258,5 @@ def main(
     write_enex(directory, str(output))
 
 
-if __name__ == "__main__":
+def main():
     app()
