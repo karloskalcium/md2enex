@@ -23,23 +23,23 @@ install: $(INSTALL_STAMP)  ## Install dependencies
 $(INSTALL_STAMP): pyproject.toml poetry.lock
 	@echo $(POETRY)
 	@if [[ -z $(POETRY) ]]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
-	$(POETRY) --version
-	$(POETRY) install
+	"$(POETRY)" --version
+	"$(POETRY)" install
 	touch $(INSTALL_STAMP)
 
 .PHONY: test
 test: $(INSTALL_STAMP)  ## Runs python unit tests
-	$(POETRY) run pytest --cov --cov-report term --cov-report html
+	"$(POETRY)" run pytest --cov --cov-report term --cov-report html
 
 .PHONY: lint
 lint: $(INSTALL_STAMP)  ## Analyze code base
-	$(POETRY) run ruff check
-	$(POETRY) run ruff format --check
+	"$(POETRY)" run ruff check
+	"$(POETRY)" run ruff format --check
 
 .PHONY: format
 format: $(INSTALL_STAMP)  ## Format code base
-	$(POETRY) run ruff check --fix
-	$(POETRY) run ruff format
+	"$(POETRY)" run ruff check --fix
+	"$(POETRY)" run ruff format
 
 .PHONY: clean
 clean:  ## Delete any directories, files or logs that are auto-generated
@@ -49,5 +49,5 @@ clean:  ## Delete any directories, files or logs that are auto-generated
 
 .PHONY: deepclean
 deepclean: clean  ## Delete all poetry environments
-	$(POETRY) env remove --all -n
+	"$(POETRY)" env remove --all -n
 	@echo poetry environments were deleted. Type 'deactivate' to deactivate the shims or 'exit' to exit the poetry shell.
