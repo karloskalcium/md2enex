@@ -141,7 +141,7 @@ def create_note_content(file: str) -> etree.Element:
     content_text = ""
     # set hard_line_breaks here b/c the Exporter on OSX doesn't add proper line breaks in the Markdown export
     html_text = pypandoc.convert_file(
-        file, "html", format="markdown+hard_line_breaks-smart-auto_identifiers", extra_args=["--wrap=none"]
+        file, to="html", format="markdown+hard_line_breaks-smart-auto_identifiers", extra_args=["--wrap=none"]
     )
     for index, line in enumerate(html_text.splitlines()):
         line_trimmed = line.strip()

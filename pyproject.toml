@@ -15,6 +15,7 @@ pypandoc-binary = "^1.13"
 
 [tool.poetry.group.dev.dependencies]
 pytest-cov = "^5.0.0"
+ruff = "^0.4.1"
 
 [tool.poetry.scripts]
 md2enex = "md2enex.md2enex:main"
