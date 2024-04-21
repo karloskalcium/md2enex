@@ -28,19 +28,11 @@ $(INSTALL_STAMP): pyproject.toml poetry.lock
 	touch $(INSTALL_STAMP)
 
 .PHONY: test
-test: $(INSTALL_STAMP) unit-test pipx-install-test  ## Runs all tests
+test: $(INSTALL_STAMP) unit-test  ## Runs all tests
 
 .PHONY: unit-test
 unit-test: $(INSTALL_STAMP)  ## Runs python unit tests
 	"$(POETRY)" run pytest --cov --cov-report term --cov-report html
-
-.PHONY: pipx-install-test
-pipx-install-test: $(INSTALL_STAMP)  ## Runs installer/packaging tests
-	cd .. ;\
-	pipx uninstall md2enex || true ;\
-	pipx install md2enex/ --python $$(command -v python) ;\
-	md2enex md2enex/tests/test1
-	@echo install test successful!
 
 .PHONY: lint
 lint: $(INSTALL_STAMP)  ## Analyze code base

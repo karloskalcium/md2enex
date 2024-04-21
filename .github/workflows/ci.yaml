@@ -28,6 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
+        id: setup-python-step
         with:
           python-version: ${{ matrix.python-version }}
       - name: Python Poetry Action
@@ -45,3 +46,10 @@ jobs:
         run: |
           make --version
           make test
+      - name: run install test
+        shell: bash
+        run: |
+          cd ..
+          pipx install md2enex/ --python '${{ steps.setup-python-step.outputs.python-path }}'
+          md2enex md2enex/tests/test1
+          echo install test successful!
