@@ -1,7 +1,7 @@
 # Makefile for wtf-bot
 # Tested with GNU Make 3.8.1
 MAKEFLAGS += --warn-undefined-variables
-SHELL        	:= /usr/bin/env bash -eu
+SHELL := /usr/bin/env bash -eu
 .DEFAULT_GOAL := help
 
 INSTALL_STAMP := .install.stamp
@@ -16,7 +16,7 @@ help:  ## Prints out documentation for available commands
 
 install: $(INSTALL_STAMP)  ## Install dependencies
 $(INSTALL_STAMP): pyproject.toml poetry.lock
-	@if [ -z $(POETRY) ]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
+	@if [[ -z $(POETRY) ]]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
 	$(POETRY) --version
 	$(POETRY) install
 	touch $(INSTALL_STAMP)
