@@ -365,14 +365,19 @@ plugins = ["importlib-metadata"]
 windows-terminal = ["colorama (>=0.4.6)"]
 
 [[package]]
-name = "pypandoc"
+name = "pypandoc-binary"
 version = "1.13"
 description = "Thin wrapper for pandoc."
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "pypandoc-1.13-py3-none-any.whl", hash = "sha256:4c7d71bf2f1ed122aac287113b5c4d537a33bbc3c1df5aed11a7d4a7ac074681"},
-    {file = "pypandoc-1.13.tar.gz", hash = "sha256:31652073c7960c2b03570bd1e94f602ca9bc3e70099df5ead4cea98ff5151c1e"},
+    {file = "pypandoc_binary-1.13-py3-none-macosx_10_9_x86_64.whl", hash = "sha256:946666388eb79b307d7f497b3b33045ef807750f8e5ef3440e0ba3bbab698044"},
+    {file = "pypandoc_binary-1.13-py3-none-macosx_11_0_arm64.whl", hash = "sha256:21ef0345726d36fc45a50211320614daf2caede684b0d0963ce8738292809746"},
+    {file = "pypandoc_binary-1.13-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:67c0c7af811bcf3cd4f3221be756a4975ec35b2d7df89d8de4313a8caa2cd54f"},
+    {file = "pypandoc_binary-1.13-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9455fdd9521cbf4b56d79a56b806afa94c8c22f3c8ef878536e58d941a70f6d6"},
+    {file = "pypandoc_binary-1.13-py3-none-musllinux_1_1_aarch64.whl", hash = "sha256:2915f52e4632bd2d0a8fcd2f7e7dfc2ea19b4e1a280fcbc2ddcd142713c4ff12"},
+    {file = "pypandoc_binary-1.13-py3-none-musllinux_1_1_x86_64.whl", hash = "sha256:11a2497320eb3dccb74de3c67b6df3e5d3f66cdc2a36a67e9a871708f7e48412"},
+    {file = "pypandoc_binary-1.13-py3-none-win_amd64.whl", hash = "sha256:3881aa7c84faec2007c0ae4466d3a1cfc93171206b8540f2defa8ea971bf6fd6"},
 ]
 
 [[package]]
@@ -486,4 +491,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "c77c9a69df11c603f3fab845454e93d5f1538c6af70d1c18b12406a1d8197f24"
+content-hash = "66b435268f98ca2890ee424b582e0283d8b0fddfc09b3a2d3b83c62f6285aa4e"
