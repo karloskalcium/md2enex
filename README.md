@@ -1,6 +1,6 @@
 # md2enex
 
-[![CI](https://github.com/karloskalcium/md2enex/actions/workflows/ci.yaml/badge.svg)](https://github.com/karloskalcium/md2enex/actions/workflows/ci.yaml)
+[![CI](https://github.com/karloskalcium/md2enex/actions/workflows/ci.yaml/badge.svg?branch=master)](https://github.com/karloskalcium/md2enex/actions/workflows/ci.yaml)
 [![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/karloskalcium/md2enex/master/LICENSE)
 [![PYTHON](https://img.shields.io/badge/python-3.10-orange.svg)](https://docs.python.org/3.10/index.html)
 
