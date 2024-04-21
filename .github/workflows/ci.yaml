@@ -2,10 +2,16 @@
 name: CI
 on:
   push:
-    branches: [ $default-branch ]
+    branches: master
   pull_request:
-    branches: [ $default-branch ]
+    branches: master
   workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -16,17 +22,34 @@ jobs:
       fail-fast: true
       matrix:
         python-version: ["3.10"]
-        poetry-version: ["1.8.2"]
+        poetry-version: ["latest"]
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
+        id: setup-python-step
         with:
           python-version: ${{ matrix.python-version }}
       - name: Python Poetry Action
-        uses: abatilo/actions-poetry@v3
+        uses: abatilo/actions-poetry@v2
         with:
           poetry-version: ${{ matrix.poetry-version }}
+        # Enable tmate debugging of manually-triggered workflows if the input option was provided
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        with:
+          detached: true
       - name: Run tests
-        run: make test
+        shell: bash
+        run: |
+          make --version
+          make test
+      - name: run install test
+        shell: bash
+        run: |
+          cd ..
+          pipx install md2enex/ --python '${{ steps.setup-python-step.outputs.python-path }}'
+          md2enex md2enex/tests/test1
+          echo install test successful!

@@ -10,11 +10,12 @@ version = "0.2"
 [tool.poetry.dependencies]
 python = "^3.10"
 lxml = "^5.2.1"
-pypandoc = "^1.13"
 typer = "^0.12.3"
+pypandoc-binary = "^1.13"
 
 [tool.poetry.group.dev.dependencies]
 pytest-cov = "^5.0.0"
+ruff = "^0.4.1"
 
 [tool.poetry.scripts]
 md2enex = "md2enex.md2enex:main"
@@ -82,5 +83,7 @@ directory = "results/coverage"
 [tool.pytest.ini_options]
 # Show extra test summary info as specified by chars (a)ll except passed
 # Output test results to junit.xml
-addopts = "--tb=short -ra --junitxml=results/unit/pytest-unit.xml --color=yes"
+addopts = "-vvv --tb=long -ra --junitxml=results/unit/pytest-unit.xml --color=yes"
 testpaths = "tests"
+# log_cli = true
+# log_cli_level = "DEBUG"
