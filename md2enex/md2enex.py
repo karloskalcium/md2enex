@@ -104,7 +104,7 @@ def set_catalog_var():
     # cribbed from https://stackoverflow.com/a/18489147/
     current_abs_path = os.path.dirname(os.path.abspath(getsourcefile(lambda: 0)))
     catalog_path = f"file://{pathname2url(os.path.join(current_abs_path, 'xml_cache/catalog.xml'))}"
-    print(catalog_path)
+    logging.debug("Catalog path: " + catalog_path)
     # Set up environment variable for local catalog cache
     os.environ["XML_CATALOG_FILES"] = catalog_path
 
@@ -222,11 +222,16 @@ def write_enex(target_directory: pathlib.Path, output_file: str):
         doctype=Doctypes.ENEX_DOCTYPE.value,
     )
 
-    typer.echo("Successfully wrote " + str(count) + " markdown files to " + output_file)
     if len(error_list) > 0:
         logging.warning(
             "Some files were skipped - these need to be cleaned up manually and reimported: " + str(error_list)
         )
+
+    if count > 0:
+        typer.echo("Successfully wrote " + str(count) + " markdown files to " + output_file)
+    else:
+        logging.error("Error - no files written.")
+        exit(2)
 
 
 def version_callback(value: bool):
@@ -255,6 +260,7 @@ def cli(
     ] = None,
 ):
     """Converts all markdown files in a directory into a single .enex file for importing to Evernote."""
+    logging.basicConfig(level=logging.DEBUG)
     set_catalog_var()
     write_enex(directory, str(output))
 
