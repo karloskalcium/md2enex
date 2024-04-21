@@ -15,7 +15,6 @@ from enum import Enum
 from inspect import getsourcefile
 from pathlib import Path
 from typing import Annotated, Optional
-from urllib.request import pathname2url
 
 import pypandoc
 import typer
@@ -101,13 +100,10 @@ def create_note_attributes() -> etree.Element:
 
 def set_xml_catalog_var():
     # Sets the XML_CATALOG_FILES variable to our catalog.xml, that points to local cache of DTDs
-    # cribbed from https://stackoverflow.com/a/18489147/
-    current_abs_path = os.path.dirname(os.path.abspath(getsourcefile(lambda: 0)))
-    # catalog_path = f"file://{pathname2url(os.path.join(current_abs_path, 'xml_cache/catalog.xml'))}"
     # use relative path to avoid Windows error with libxml2 https://gitlab.gnome.org/GNOME/libxml2/-/issues/334
     # This will require changing the working directory during parsing
     catalog_path = "xml_cache/catalog.xml"
-    logging.warning("Catalog path: " + catalog_path)
+    logging.debug("Catalog path: " + catalog_path)
     # Set up environment variable for local catalog cache
     os.environ["XML_CATALOG_FILES"] = catalog_path
 
@@ -277,7 +273,7 @@ def cli(
     ] = None,
 ):
     """Converts all markdown files in a directory into a single .enex file for importing to Evernote."""
-    logging.basicConfig(level=logging.DEBUG)
+    # logging.basicConfig(level=logging.DEBUG)
     set_xml_catalog_var()
     write_enex(directory, str(output))
 
