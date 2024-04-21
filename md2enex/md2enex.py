@@ -99,12 +99,15 @@ def create_note_attributes() -> etree.Element:
     return note_attributes_el
 
 
-def set_catalog_var():
+def set_xml_catalog_var():
     # Sets the XML_CATALOG_FILES variable to our catalog.xml, that points to local cache of DTDs
     # cribbed from https://stackoverflow.com/a/18489147/
     current_abs_path = os.path.dirname(os.path.abspath(getsourcefile(lambda: 0)))
-    catalog_path = f"file://{pathname2url(os.path.join(current_abs_path, 'xml_cache/catalog.xml'))}"
-    logging.debug("Catalog path: " + catalog_path)
+    # catalog_path = f"file://{pathname2url(os.path.join(current_abs_path, 'xml_cache/catalog.xml'))}"
+    # use relative path to avoid Windows error with libxml2 https://gitlab.gnome.org/GNOME/libxml2/-/issues/334
+    # This will require changing the working directory during parsing
+    catalog_path = "xml_cache/catalog.xml"
+    logging.warning("Catalog path: " + catalog_path)
     # Set up environment variable for local catalog cache
     os.environ["XML_CATALOG_FILES"] = catalog_path
 
@@ -115,8 +118,22 @@ def strip_note_el(en_note_el: etree.Element) -> etree.Element:
 
 def validate_note_xml(note_xml: bytes):
     # For speed, access all XML from local XML CATALOG
-    parser = etree.XMLParser(dtd_validation=True, no_network=True)
-    etree.fromstring(note_xml, parser=parser)
+    try:
+        # Due to a libxml2 bug on windows, we need to use a relative path for the DTDs that are packaged with the tool
+        # As such before doing the parsing, we change directory to the module location then change back afterwards
+        working_directory = os.getcwd()
+        # Get the path of where this module lives
+        script_abs_path = os.path.dirname(os.path.abspath(getsourcefile(lambda: 0)))
+        os.chdir(script_abs_path)
+        parser = etree.XMLParser(dtd_validation=True, no_network=True)
+        etree.fromstring(note_xml, parser=parser)
+    except etree.XMLSyntaxError as err:
+        for error in parser.error_log:
+            logging.error(error.message + "at line: " + str(error.line))
+
+        raise err
+    finally:
+        os.chdir(working_directory)
 
 
 def check_invalid_tags(en_note_el: etree.Element):
@@ -231,7 +248,7 @@ def write_enex(target_directory: pathlib.Path, output_file: str):
         typer.echo("Successfully wrote " + str(count) + " markdown files to " + output_file)
     else:
         logging.error("Error - no files written.")
-        exit(2)
+        raise typer.Exit(code=2)
 
 
 def version_callback(value: bool):
@@ -261,7 +278,7 @@ def cli(
 ):
     """Converts all markdown files in a directory into a single .enex file for importing to Evernote."""
     logging.basicConfig(level=logging.DEBUG)
-    set_catalog_var()
+    set_xml_catalog_var()
     write_enex(directory, str(output))
 
 

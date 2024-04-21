@@ -46,5 +46,6 @@ You can also ask a question in the [discussions section](https://github.com/karl
 
 ## Other tools
 
-- https://github.com/akosbalasko/yarle  "Yarle - The ultimate converter of Evernote notes to Markdown"
-- https://github.com/wormi4ok/evernote2md "Convert Evernote .enex files to Markdown"
+- [Exporter - Apples Notes to markdown exporter](http://falcon.star-lord.me/exporter/)
+- [Yarle - The ultimate converter of Evernote notes to Markdown](https://github.com/akosbalasko/yarle)
+- [Evernote2md - Convert Evernote .enex files to Markdown](https://github.com/wormi4ok/evernote2md)

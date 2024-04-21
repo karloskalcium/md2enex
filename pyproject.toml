@@ -82,5 +82,7 @@ directory = "results/coverage"
 [tool.pytest.ini_options]
 # Show extra test summary info as specified by chars (a)ll except passed
 # Output test results to junit.xml
-addopts = "--tb=short -ra --junitxml=results/unit/pytest-unit.xml --color=yes"
+addopts = "-vvv --tb=long -ra --junitxml=results/unit/pytest-unit.xml --color=yes"
 testpaths = "tests"
+# log_cli = true
+# log_cli_level = "DEBUG"
