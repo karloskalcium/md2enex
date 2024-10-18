@@ -29,7 +29,7 @@ class Appconfig(Enum):
 
 class Doctypes(Enum):
     ENEX_DOCTYPE = '<!DOCTYPE en-export SYSTEM "http://xml.evernote.com/pub/evernote-export4.dtd">'
-    ENML_DOCTYPE = '<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">'
+    ENML_DOCTYPE = '<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml3.dtd">'
 
 
 IMPORT_TAG_WITH_DATETIME = (
@@ -218,7 +218,8 @@ def write_enex(target_directory: pathlib.Path, output_file: str):
     for file in files:
         filename = str(file)
         try:
-            root.append(process_note(filename))
+            note_xml = process_note(filename)
+            root.append(note_xml)
             count += 1
         except (etree.LxmlError, ValueError) as e:
             error_list.append(filename)
@@ -236,9 +237,10 @@ def write_enex(target_directory: pathlib.Path, output_file: str):
     )
 
     if len(error_list) > 0:
-        logging.warning(
+        logging.error(
             "Some files were skipped - these need to be cleaned up manually and reimported: " + str(error_list)
         )
+        raise typer.Exit(code=1)
 
     if count > 0:
         typer.echo("Successfully wrote " + str(count) + " markdown files to " + output_file)
