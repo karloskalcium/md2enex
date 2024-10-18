@@ -94,6 +94,7 @@ INVALID_ATTRIBUTES = [
 
 app = typer.Typer(add_completion=False)
 
+
 # stolen from https://stackoverflow.com/a/39501288/4907881
 # returns creation date in seconds since Jan 1 1970 for a file in a platform-agnostic fashion
 def creation_date_seconds(path_to_file):
@@ -124,7 +125,7 @@ def create_title(file: str) -> etree.Element:
 
 def create_creation_date(file: str) -> etree.Element:
     creation_date_ts = creation_date_seconds(file)
-    creation_date = enex_date_format(datetime.datetime.fromtimestamp(creation_date_ts, tz=datetime.timezone.utc))
+    creation_date = enex_date_format(datetime.datetime.fromtimestamp(creation_date_ts, tz=datetime.UTC))
     created_el = etree.Element("created")
     created_el.text = creation_date
     return created_el
@@ -132,9 +133,7 @@ def create_creation_date(file: str) -> etree.Element:
 
 def create_updated_date(file: str) -> etree.Element:
     modification_date_ts = os.path.getmtime(file)
-    modification_date = enex_date_format(
-        datetime.datetime.fromtimestamp(modification_date_ts, tz=datetime.timezone.utc)
-    )
+    modification_date = enex_date_format(datetime.datetime.fromtimestamp(modification_date_ts, tz=datetime.UTC))
     updated_el = etree.Element("updated")
     updated_el.text = modification_date
     return updated_el
@@ -251,7 +250,7 @@ def enex_date_format(date: datetime) -> str:
 
 # header material for enex format
 def create_en_export() -> etree.Element:
-    now = datetime.datetime.now(datetime.timezone.utc)
+    now = datetime.datetime.now(datetime.UTC)
     now_str = enex_date_format(now)
     en_export = etree.Element("en-export")
     en_export.set("export-date", now_str)
