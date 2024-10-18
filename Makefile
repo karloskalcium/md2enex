@@ -21,8 +21,8 @@ help:  ## Prints out documentation for available commands
 
 install: $(INSTALL_STAMP)  ## Install dependencies
 $(INSTALL_STAMP): pyproject.toml poetry.lock
-	@echo $(POETRY)
-	@if [[ -z $(POETRY) ]]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
+	@echo "$(POETRY)"
+	@if [[ -z "$(POETRY)" ]]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
 	"$(POETRY)" --version
 	"$(POETRY)" install
 	touch $(INSTALL_STAMP)
