@@ -6,8 +6,8 @@
     <content><![CDATA[<?xml version='1.0' encoding='UTF-8' standalone='no'?>
 <!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml3.dtd">
 <en-note><p>testing file with difficult name</p><p>testing 123</p></en-note>]]></content>
-    <created>20240421T044009Z</created>
-    <updated>20241017T204047Z</updated>
+    <created>20240101T120000Z</created>
+    <updated>20241031T235959Z</updated>
     <tag>md2enex-import:2024-10-18T09:00:01</tag>
     <note-attributes>
 </note-attributes>
@@ -17,8 +17,8 @@
     <content><![CDATA[<?xml version='1.0' encoding='UTF-8' standalone='no'?>
 <!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml3.dtd">
 <en-note><p>test odd characters<br/>'quotes'<br/>"double quotes"<br/>éá &lt;- accents<br/><code>backticks</code><br/>emjois: 😀😁<br/>markdown emojis: <span>😄</span></p></en-note>]]></content>
-    <created>20241018T173600Z</created>
-    <updated>20241018T173600Z</updated>
+    <created>20240101T120000Z</created>
+    <updated>20241031T235959Z</updated>
     <tag>md2enex-import:2024-10-18T09:00:01</tag>
     <note-attributes>
 </note-attributes>
