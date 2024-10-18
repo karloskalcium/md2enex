@@ -28,7 +28,7 @@ $(INSTALL_STAMP): pyproject.toml poetry.lock
 	touch $(INSTALL_STAMP)
 
 .PHONY: test
-test: $(INSTALL_STAMP) unit-test  ## Runs all tests
+test: $(INSTALL_STAMP) lint unit-test  ## Runs all linting and unit tests
 
 .PHONY: unit-test
 unit-test: $(INSTALL_STAMP)  ## Runs python unit tests
@@ -48,7 +48,7 @@ format: $(INSTALL_STAMP)  ## Format code base
 clean:  ## Delete any directories, files or logs that are auto-generated
 	find . -type d -name "__pycache__" | xargs rm -rf {};
 	rm -f .install.stamp .coverage
-	rm -rf results dist .ruff_cache .pytest_cache
+	rm -rf results dist .ruff_cache .pytest_cache export.enex
 
 .PHONY: deepclean
 deepclean: clean  ## Delete all poetry environments

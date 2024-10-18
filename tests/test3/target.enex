@@ -1,25 +1,25 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE en-export SYSTEM "http://xml.evernote.com/pub/evernote-export4.dtd">
-<en-export export-date="20241017T203128Z" application="md2enex" version="0.2">
+<en-export export-date="20241018T090001Z" application="md2enex" version="0.3">
   <note>
     <title>test3 -</title>
     <content><![CDATA[<?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">
+<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml3.dtd">
 <en-note><p>testing file with difficult name</p><p>testing 123</p></en-note>]]></content>
     <created>20240421T044009Z</created>
     <updated>20241017T204047Z</updated>
-    <tag>md2enex-import:2024-10-17T16:41:05</tag>
+    <tag>md2enex-import:2024-10-18T09:00:01</tag>
     <note-attributes>
 </note-attributes>
   </note>
   <note>
-    <title>xxx</title>
+    <title>test3.oddchars</title>
     <content><![CDATA[<?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">
-<en-note><p>test odd characters<br/>'quotes'<br/>"double quotes"<br/>éá &lt;- accents<br/><code>backticks</code></p></en-note>]]></content>
+<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml3.dtd">
+<en-note><p>test odd characters<br/>'quotes'<br/>"double quotes"<br/>éá &lt;- accents<br/><code>backticks</code><br/>emjois: 😀😁<br/>markdown emojis: <span>😄</span></p></en-note>]]></content>
     <created>20240421T044009Z</created>
-    <updated>20241017T203124Z</updated>
-    <tag>md2enex-import:2024-10-17T16:31:28</tag>
+    <updated>20241018T151506Z</updated>
+    <tag>md2enex-import:2024-10-18T09:00:01</tag>
     <note-attributes>
 </note-attributes>
   </note>

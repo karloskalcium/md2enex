@@ -36,8 +36,63 @@ IMPORT_TAG_WITH_DATETIME = (
     Appconfig.APP_NAME.value + "-import" + ":" + datetime.datetime.now().isoformat(timespec="seconds")
 )
 
-app = typer.Typer(add_completion=False)
+# taken from here https://dev.evernote.com/doc/articles/enml.php
+INVALID_TAGS = [
+    "applet",
+    "base",
+    "basefont",
+    "bgsound",
+    "blink",
+    "body",
+    "button",
+    "dir",
+    "embed",
+    "fieldset",
+    "form",
+    "frame",
+    "frameset",
+    "head",
+    "html",
+    "iframe",
+    "ilayer",
+    "input",
+    "isindex",
+    "label",
+    "layer",
+    "legend",
+    "link",
+    "marquee",
+    "menu",
+    "meta",
+    "noframes",
+    "noscript",
+    "object",
+    "optgroup",
+    "option",
+    "param",
+    "plaintext",
+    "script",
+    "select",
+    "style",
+    "textarea",
+    "xml",
+]
 
+INVALID_ATTRIBUTES = [
+    "id",
+    "class",
+    "onclick",
+    "ondblclick",
+    "on*",
+    "accesskey",
+    "data",
+    "data-cites",
+    "data-emoji",
+    "dynsrc",
+    "tabindex",
+]
+
+app = typer.Typer(add_completion=False)
 
 # stolen from https://stackoverflow.com/a/39501288/4907881
 # returns creation date in seconds since Jan 1 1970 for a file in a platform-agnostic fashion
@@ -108,20 +163,22 @@ def set_xml_catalog_var():
     os.environ["XML_CATALOG_FILES"] = catalog_path
 
 
-def strip_note_el(en_note_el: etree.Element) -> etree.Element:
-    etree.strip_attributes(en_note_el, "id", "class", "data", "data-cites")
+def strip_note_el(en_note_el: etree.Element):
+    """Strips out invalid attributes and tags per https://dev.evernote.com/doc/articles/enml.php"""
+    etree.strip_attributes(en_note_el, *INVALID_ATTRIBUTES)
+    etree.strip_tags(en_note_el, *INVALID_TAGS)
 
 
 def validate_note_xml(note_xml: bytes):
     # For speed, access all XML from local XML CATALOG
+    working_directory = os.getcwd()
+    parser = etree.XMLParser(dtd_validation=True, no_network=True)
     try:
         # Due to a libxml2 bug on windows, we need to use a relative path for the DTDs that are packaged with the tool
         # As such before doing the parsing, we change directory to the module location then change back afterwards
-        working_directory = os.getcwd()
         # Get the path of where this module lives
         script_abs_path = os.path.dirname(os.path.abspath(getsourcefile(lambda: 0)))
         os.chdir(script_abs_path)
-        parser = etree.XMLParser(dtd_validation=True, no_network=True)
         etree.fromstring(note_xml, parser=parser)
     except etree.XMLSyntaxError as err:
         for error in parser.error_log:
@@ -141,7 +198,7 @@ def create_note_content(file: str) -> etree.Element:
     content_text = ""
     # set hard_line_breaks here b/c the Exporter on OSX doesn't add proper line breaks in the Markdown export
     html_text = pypandoc.convert_file(
-        file, to="html", format="markdown+hard_line_breaks-smart-auto_identifiers", extra_args=["--wrap=none"]
+        file, to="html", format="markdown+emoji+hard_line_breaks-smart-auto_identifiers", extra_args=["--wrap=none"]
     )
     for index, line in enumerate(html_text.splitlines()):
         line_trimmed = line.strip()
@@ -207,7 +264,7 @@ def write_enex(target_directory: pathlib.Path, output_file: str):
     files = sorted(target_directory.glob("*.md"), key=lambda fn: str.lower(fn.name))
     # Ensure at least one markdown file in directory
     if len(files) <= 0:
-        typer.echo("No markdown files found in " + target_directory.name, err=True)
+        typer.secho("No markdown files found in " + target_directory.name, err=True, fg="red")
         raise typer.Exit(code=1)
 
     # ElementTree object that will contain our xml
@@ -237,15 +294,17 @@ def write_enex(target_directory: pathlib.Path, output_file: str):
     )
 
     if len(error_list) > 0:
-        logging.error(
-            "Some files were skipped - these need to be cleaned up manually and reimported: " + str(error_list)
+        typer.secho(
+            "Some files were skipped - these need to be cleaned up manually and reimported: " + str(error_list),
+            err=True,
+            fg="red",
         )
         raise typer.Exit(code=1)
 
     if count > 0:
-        typer.echo("Successfully wrote " + str(count) + " markdown files to " + output_file)
+        typer.secho("Successfully wrote " + str(count) + " markdown files to " + output_file, err=True)
     else:
-        logging.error("Error - no files written.")
+        type.secho("Error - no files written.", err=True, fg="red")
         raise typer.Exit(code=2)
 
 
@@ -255,7 +314,7 @@ def version_callback(value: bool):
         raise typer.Exit(code=0)
 
 
-@app.command()
+@app.command(context_settings={"help_option_names": ["-h", "--help"]})
 def cli(
     directory: Annotated[Path, typer.Argument(exists=True, file_okay=False, dir_okay=True, path_type=pathlib.Path)],
     output: Annotated[

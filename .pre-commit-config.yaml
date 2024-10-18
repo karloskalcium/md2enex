@@ -18,7 +18,7 @@ repos:
     rev: 08fba30538869a440b5059de90af03e3502e35fb  # frozen: 0.7.17
     hooks:
       - id: mdformat
-        exclude: ^tests/test4/markdown-with-yaml.md$
+        exclude: ^tests/test4/test4.markdownyaml.md$
         additional_dependencies:
           - mdformat-gfm
           - mdformat-toc
