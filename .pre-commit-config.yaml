@@ -9,6 +9,7 @@ repos:
       - id: end-of-file-fixer
       - id: mixed-line-ending
       - id: trailing-whitespace
+        exclude: ^md2enex/xml_cache/
   - repo: https://github.com/rhysd/actionlint
     rev: c6bd06256dd700a45e483869bcdcf304239393a6  # frozen: v1.6.27
     hooks:
