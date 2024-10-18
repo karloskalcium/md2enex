@@ -1,3 +1,5 @@
+import filecmp
+
 from freezegun import freeze_time
 from typer.testing import CliRunner
 
@@ -13,34 +15,47 @@ runner = CliRunner(mix_stderr=False)
 
 @freeze_time(FIXED_TIME)
 def test_test1():
-    result = runner.invoke(app, ["tests/test1"])
+    path = "tests/test1"
+    result = runner.invoke(app, [path])
     assert result.exit_code == 0
     assert "Successfully wrote 1 markdown files to export.enex" in result.stderr
+    assert filecmp.cmp(f"{path}/target.enex", "export.enex")
 
 
 @freeze_time(FIXED_TIME)
 def test_test2():
-    result = runner.invoke(app, ["tests/test2"])
+    path = "tests/test2"
+    result = runner.invoke(app, [path])
     assert result.exit_code == 0
     assert "Successfully wrote 3 markdown files to export.enex" in result.stderr
+    assert filecmp.cmp(f"{path}/target.enex", "export.enex")
 
 
+@freeze_time(FIXED_TIME)
 def test_test3():
-    result = runner.invoke(app, ["tests/test3"])
+    path = "tests/test3"
+    result = runner.invoke(app, [path])
     assert result.exit_code == 1
     assert "these need to be cleaned up manually and reimported:" in result.stderr
+    assert filecmp.cmp(f"{path}/target.enex", "export.enex")
 
 
+@freeze_time(FIXED_TIME)
 def test_test4():
-    result = runner.invoke(app, ["tests/test4"])
+    path = "tests/test4"
+    result = runner.invoke(app, [path])
     assert result.exit_code == 0
     assert "Successfully wrote 1 markdown files to export.enex" in result.stderr
+    assert filecmp.cmp(f"{path}/target.enex", "export.enex")
 
 
+@freeze_time(FIXED_TIME)
 def test_test5():
-    result = runner.invoke(app, ["tests/test5"])
+    path = "tests/test5"
+    result = runner.invoke(app, [path])
     assert result.exit_code == 0
     assert "Successfully wrote 1 markdown files to export.enex" in result.stderr
+    assert filecmp.cmp(f"{path}/target.enex", "export.enex")
 
 
 freezer.stop()
