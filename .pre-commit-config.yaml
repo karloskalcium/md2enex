@@ -3,7 +3,7 @@ default_language_version:
   python: python3.10
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: 2c9f875913ee60ca25ce70243dc24d5b6415598c  # frozen: v4.6.0
+    rev: cef0300fd0fc4d2a87a85fa2093c6b283ea36f4b  # frozen: v5.0.0
     hooks:
       - id: check-yaml
       - id: end-of-file-fixer
@@ -11,11 +11,11 @@ repos:
       - id: trailing-whitespace
         exclude: ^md2enex/xml_cache/
   - repo: https://github.com/rhysd/actionlint
-    rev: c6bd06256dd700a45e483869bcdcf304239393a6  # frozen: v1.6.27
+    rev: 4e683ab8014a63fafa117492a0c6053758e6d593  # frozen: v1.7.3
     hooks:
       - id: actionlint-system
   - repo: https://github.com/executablebooks/mdformat
-    rev: 08fba30538869a440b5059de90af03e3502e35fb  # frozen: 0.7.17
+    rev: 86542e37a3a40974eb812b16b076220fe9bb4278  # frozen: 0.7.18
     hooks:
       - id: mdformat
         exclude: ^tests/test4/test4.markdownyaml.md$
