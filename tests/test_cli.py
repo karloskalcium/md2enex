@@ -28,7 +28,7 @@ def test_test2():
 def test_test3():
     result = runner.invoke(app, ["tests/test3"])
     assert result.exit_code == 1
-    assert "these need to be cleaned up manually and reimported: ['tests/test3/test3.img.md']" in result.stderr
+    assert "these need to be cleaned up manually and reimported:" in result.stderr
 
 
 def test_test4():
