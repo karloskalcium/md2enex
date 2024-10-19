@@ -11,6 +11,7 @@ import os
 import os.path
 import pathlib
 import platform
+import subprocess
 from enum import Enum
 from inspect import getsourcefile
 from pathlib import Path
@@ -31,10 +32,6 @@ class Doctypes(Enum):
     ENEX_DOCTYPE = '<!DOCTYPE en-export SYSTEM "http://xml.evernote.com/pub/evernote-export4.dtd">'
     ENML_DOCTYPE = '<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml3.dtd">'
 
-
-IMPORT_TAG_WITH_DATETIME = (
-    Appconfig.APP_NAME.value + "-import" + ":" + datetime.datetime.now().isoformat(timespec="seconds")
-)
 
 # taken from here https://dev.evernote.com/doc/articles/enml.php
 INVALID_TAGS = [
@@ -97,7 +94,7 @@ app = typer.Typer(add_completion=False)
 
 # stolen from https://stackoverflow.com/a/39501288/4907881
 # returns creation date in seconds since Jan 1 1970 for a file in a platform-agnostic fashion
-def creation_date_seconds(path_to_file):
+def creation_date_seconds(path_to_file) -> float:
     """
     Try to get the date that a file was created, falling back to when it was
     last modified if that isn't possible.
@@ -110,9 +107,12 @@ def creation_date_seconds(path_to_file):
         try:
             return stat.st_birthtime
         except AttributeError:
-            # We're probably on Linux. No easy way to get creation dates here,
-            # so we'll settle for when its content was last modified.
-            return stat.st_mtime
+            # We're probably on Linux. Try a system call
+            result = subprocess.run(["stat", "-c", "%W", path_to_file], capture_output=True)
+            if result.returncode == 0:
+                return float(result.stdout)
+            else:
+                return stat.st_mtime
 
 
 def create_title(file: str) -> etree.Element:
@@ -141,7 +141,10 @@ def create_updated_date(file: str) -> etree.Element:
 
 def create_tag() -> etree.Element:
     tag_el = etree.Element("tag")
-    tag_el.text = IMPORT_TAG_WITH_DATETIME
+    tag_with_datetime = (
+        Appconfig.APP_NAME.value + "-import" + ":" + datetime.datetime.now().isoformat(timespec="seconds")
+    )
+    tag_el.text = tag_with_datetime
     return tag_el
 
 
