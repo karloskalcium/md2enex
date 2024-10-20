@@ -1,5 +1,5 @@
-import filecmp
 import os
+import subprocess
 
 import pytest
 from freezegun import freeze_time
@@ -26,13 +26,20 @@ def _mock_times(monkeypatch):
     monkeypatch.setattr(os.path, "getmtime", lambda _: MODIFICATION_TIME)
 
 
+def compare_files(file1: str, file2: str):
+    # easier to use diff here since it has a built in function to strip newlines
+    # so that the tests work on all platforms
+    result = subprocess.run(["diff", "--strip-trailing-cr", file1, file2])
+    return result.returncode == 0
+
+
 @freeze_time(FIXED_TIME)
 def test_test1():
     path = "tests/test1"
     result = runner.invoke(app, [path])
     assert result.exit_code == 0
     assert "Successfully wrote 1 markdown files to export.enex" in result.stderr
-    assert filecmp.cmp(f"{path}/target.enex", "export.enex", shallow=False)
+    assert compare_files(f"{path}/target.enex", "export.enex")
 
 
 @freeze_time(FIXED_TIME)
@@ -41,7 +48,7 @@ def test_test2():
     result = runner.invoke(app, [path])
     assert result.exit_code == 0
     assert "Successfully wrote 3 markdown files to export.enex" in result.stderr
-    assert filecmp.cmp(f"{path}/target.enex", "export.enex", shallow=False)
+    assert compare_files(f"{path}/target.enex", "export.enex")
 
 
 @freeze_time(FIXED_TIME)
@@ -50,7 +57,7 @@ def test_test3():
     result = runner.invoke(app, [path])
     assert result.exit_code == 1
     assert "these need to be cleaned up manually and reimported:" in result.stderr
-    assert filecmp.cmp(f"{path}/target.enex", "export.enex", shallow=False)
+    assert compare_files(f"{path}/target.enex", "export.enex")
 
 
 @freeze_time(FIXED_TIME)
@@ -59,7 +66,7 @@ def test_test4():
     result = runner.invoke(app, [path])
     assert result.exit_code == 0
     assert "Successfully wrote 1 markdown files to export.enex" in result.stderr
-    assert filecmp.cmp(f"{path}/target.enex", "export.enex", shallow=False)
+    assert compare_files(f"{path}/target.enex", "export.enex")
 
 
 @freeze_time(FIXED_TIME)
@@ -68,7 +75,7 @@ def test_test5():
     result = runner.invoke(app, [path])
     assert result.exit_code == 0
     assert "Successfully wrote 1 markdown files to export.enex" in result.stderr
-    assert filecmp.cmp(f"{path}/target.enex", "export.enex", shallow=False)
+    assert compare_files(f"{path}/target.enex", "export.enex")
 
 
 freezer.stop()

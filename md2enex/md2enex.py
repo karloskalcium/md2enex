@@ -151,7 +151,7 @@ def create_tag() -> etree.Element:
 def create_note_attributes() -> etree.Element:
     note_attributes_el = etree.Element("note-attributes")
     # to make format match standard Evernote export
-    note_attributes_el.text = os.linesep
+    note_attributes_el.text = "\n"
     return note_attributes_el
 
 
