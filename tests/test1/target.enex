@@ -1,14 +1,14 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE en-export SYSTEM "http://xml.evernote.com/pub/evernote-export4.dtd">
-<en-export export-date="20241017T203014Z" application="md2enex" version="0.2">
+<en-export export-date="20241018T090001Z" application="md2enex" version="0.3">
   <note>
     <title>test1</title>
     <content><![CDATA[<?xml version='1.0' encoding='UTF-8' standalone='no'?>
-<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd">
+<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml3.dtd">
 <en-note><p>line 1<br/>line 2<br/>line 3<br/><strong>bold</strong></p></en-note>]]></content>
-    <created>20240421T044009Z</created>
-    <updated>20241017T194542Z</updated>
-    <tag>md2enex-import:2024-10-17T16:30:14</tag>
+    <created>20240101T120000Z</created>
+    <updated>20241031T235959Z</updated>
+    <tag>md2enex-import:2024-10-18T09:00:01</tag>
     <note-attributes>
 </note-attributes>
   </note>

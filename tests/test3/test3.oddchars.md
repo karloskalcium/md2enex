@@ -5,3 +5,5 @@ test odd characters
 "double quotes"
 éá \<- accents
 `backticks`
+emjois: 😀😁
+markdown emojis: :smile:

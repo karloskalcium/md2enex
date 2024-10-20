@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/karloskalcium/md2enex/actions/workflows/ci.yaml/badge.svg?branch=master)](https://github.com/karloskalcium/md2enex/actions/workflows/ci.yaml)
 [![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/karloskalcium/md2enex/master/LICENSE)
-[![PYTHON](https://img.shields.io/badge/python-3.10-orange.svg)](https://docs.python.org/3.10/index.html)
+[![PYTHON](https://img.shields.io/badge/python-3.12-orange.svg)](https://docs.python.org/3.12/index.html)
 
 `md2enex` is a command-line tool that converts a directory of markdown files to an Evernote `.enex` export format, that can then be imported into Evernote.
 
@@ -17,7 +17,7 @@
 
 ### Install python and pipx
 
-1. Install `python` verion 3.10 or later: [Instructions](https://www.python.org/downloads/)
+1. Install `python` verion 3.12 or later: [Instructions](https://www.python.org/downloads/)
 1. Install `pipx`: [Instructions](https://pipx.pypa.io/stable/installation/)
 
 ### Install md2enex
@@ -41,7 +41,7 @@ The resultant `.enex` file can be imported into Evernote using the import featur
 You can get additional help by running:
 
 ```commandline
-md2enex --help
+md2enex -h
 ```
 
 ## Markdown formatting notes
@@ -64,6 +64,7 @@ You can also ask a question in the [discussions section](https://github.com/karl
 
 ## Other tools
 
+- [md2evernote](https://github.com/rxrw/md2evernote)
 - [Exporter - Apples Notes to markdown exporter](http://falcon.star-lord.me/exporter/)
 - [Yarle - The ultimate converter of Evernote notes to Markdown](https://github.com/akosbalasko/yarle)
 - [Evernote2md - Convert Evernote .enex files to Markdown](https://github.com/wormi4ok/evernote2md)
@@ -75,5 +76,5 @@ This project uses [Poetry](https://python-poetry.org/) for packaging and depende
 Most of the things you need to do are targets in the makefile.
 
 - `make` to get a list of targets
-- `make test` to run the tests
+- `make unit-test` to run the tests
 - `make lint` to run the ruff linter
