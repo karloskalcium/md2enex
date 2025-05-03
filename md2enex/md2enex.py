@@ -16,11 +16,15 @@ from enum import Enum
 from inspect import getsourcefile
 from pathlib import Path
 from typing import Annotated, Optional
+import io
+from urllib.parse import unquote
 
 import pypandoc
 import typer
 from lxml import etree
-
+import base64
+import mimetypes
+import hashlib
 
 # Enum for App Configuration Constants with functions
 class Appconfig(Enum):
@@ -87,6 +91,7 @@ INVALID_ATTRIBUTES = [
     "data-emoji",
     "dynsrc",
     "tabindex",
+    "aria-hidden",
 ]
 
 app = typer.Typer(add_completion=False)
@@ -191,9 +196,86 @@ def validate_note_xml(note_xml: bytes):
         os.chdir(working_directory)
 
 
-def check_invalid_tags(en_note_el: etree.Element):
-    if len(en_note_el.findall(".//img")) or len(en_note_el.findall(".//figure")):
-        raise etree.LxmlSyntaxError("Found image tags - skipping...")
+def check_invalid_tags(en_note_el: etree.Element, base_dir: str) -> list:
+    """Check for invalid tags and handle them appropriately."""
+    resources = []
+    # Convert img tags to en-media tags and create resources
+    for img in en_note_el.findall(".//img"):
+        if "src" not in img.attrib:
+            continue
+            
+        # Decode URL-encoded path and make it relative to the markdown file
+        src = unquote(img.attrib["src"])
+        # Make path relative to the markdown file's directory
+        full_path = os.path.join(base_dir, src)
+        if not os.path.exists(full_path):
+            logging.warning(f"Image file not found: {full_path}")
+            continue
+            
+        # Read image file
+        with open(full_path, "rb") as f:
+            image_data = f.read()
+            
+        # Convert PNG to JPEG if needed
+        mime_type = mimetypes.guess_type(full_path)[0]
+        if not mime_type:
+            mime_type = "image/jpeg"  # default to jpeg if type can't be determined
+            
+        # Convert to base64
+        base64_data = base64.b64encode(image_data).decode('utf-8')
+            
+        # Create resource element
+        resource = etree.Element("resource")
+        
+        # Add data element with base64-encoded image
+        data_el = etree.Element("data")
+        data_el.text = base64_data
+        data_el.set("encoding", "base64")
+        resource.append(data_el)
+        
+        # Add mime type
+        mime_el = etree.Element("mime")
+        mime_el.text = mime_type
+        resource.append(mime_el)
+        
+        # Add width and height if available
+        if "width" in img.attrib:
+            width_el = etree.Element("width")
+            width_el.text = img.attrib["width"]
+            resource.append(width_el)
+        if "height" in img.attrib:
+            height_el = etree.Element("height")
+            height_el.text = img.attrib["height"]
+            resource.append(height_el)
+            
+        # Create en-media element
+        en_media = etree.Element("en-media")
+        en_media.set("type", mime_type)
+        # Use MD5 hash of image data as the hash attribute
+        hash_value = hashlib.md5(image_data).hexdigest()
+        en_media.set("hash", hash_value)
+        
+        # Copy alt text if present
+        if "alt" in img.attrib:
+            en_media.text = img.attrib["alt"]
+            
+        # Replace img with en-media
+        parent = img.getparent()
+        if parent is not None:
+            parent.replace(img, en_media)
+            # Add resource to list
+            resources.append(resource)
+    
+    # Remove figure tags but keep their content
+    for figure in en_note_el.findall(".//figure"):
+        parent = figure.getparent()
+        if parent is not None:
+            # Move all children of figure to its parent
+            for child in figure:
+                parent.insert(parent.index(figure), child)
+            parent.remove(figure)
+            
+    return resources
 
 
 def create_note_content(file: str) -> etree.Element:
@@ -202,6 +284,7 @@ def create_note_content(file: str) -> etree.Element:
     html_text = pypandoc.convert_file(
         file, to="html", format="markdown+emoji+hard_line_breaks-smart-auto_identifiers", extra_args=["--wrap=none"]
     )
+
     for index, line in enumerate(html_text.splitlines()):
         line_trimmed = line.strip()
         # skip h1 tag from first line, if present, as this is likely the title
@@ -211,6 +294,10 @@ def create_note_content(file: str) -> etree.Element:
 
     en_note_el = etree.XML(f"<en-note>{content_text}</en-note>")
     strip_note_el(en_note_el)
+    
+    # Process images and get resources
+    resources = check_invalid_tags(en_note_el, os.path.dirname(file))
+    
     en_note_bytes = etree.tostring(
         en_note_el,
         encoding="UTF-8",
@@ -222,23 +309,28 @@ def create_note_content(file: str) -> etree.Element:
     )
 
     validate_note_xml(en_note_bytes)
-    check_invalid_tags(en_note_el)
 
     content_el = etree.Element("content")
     content_el.text = etree.CDATA(en_note_bytes.decode("utf-8"))
-
-    return content_el
+    
+    # Return both content and resources
+    return content_el, resources
 
 
 def process_note(file: str) -> etree.Element:
     note_el = etree.Element("note")
 
     note_el.append(create_title(file))
-    note_el.append(create_note_content(file))
+    content_el, resources = create_note_content(file)
+    note_el.append(content_el)
     note_el.append(create_creation_date(file))
     note_el.append(create_updated_date(file))
     note_el.append(create_tag())
     note_el.append(create_note_attributes())
+    
+    # Add resources to note
+    for resource in resources:
+        note_el.append(resource)
 
     return note_el
 
@@ -306,7 +398,7 @@ def write_enex(target_directory: pathlib.Path, output_file: str):
     if count > 0:
         typer.secho("Successfully wrote " + str(count) + " markdown files to " + output_file, err=True)
     else:
-        type.secho("Error - no files written.", err=True, fg="red")
+        typer.secho("Error - no files written.", err=True, fg="red")
         raise typer.Exit(code=2)
 
 
