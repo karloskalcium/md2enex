@@ -1,6 +1,6 @@
 ---
 default_language_version:
-  python: python3.10
+  python: python3.13
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: cef0300fd0fc4d2a87a85fa2093c6b283ea36f4b  # frozen: v5.0.0
@@ -11,11 +11,11 @@ repos:
       - id: trailing-whitespace
         exclude: ^md2enex/xml_cache/
   - repo: https://github.com/rhysd/actionlint
-    rev: 4e683ab8014a63fafa117492a0c6053758e6d593  # frozen: v1.7.3
+    rev: 03d0035246f3e81f36aed592ffb4bebf33a03106  # frozen: v1.7.7
     hooks:
       - id: actionlint-system
   - repo: https://github.com/executablebooks/mdformat
-    rev: 86542e37a3a40974eb812b16b076220fe9bb4278  # frozen: 0.7.18
+    rev: ff29be1a1ba8029d9375882aa2c812b62112a593  # frozen: 0.7.22
     hooks:
       - id: mdformat
         exclude: ^tests/test4/test4.markdownyaml.md$

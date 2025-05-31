@@ -25,14 +25,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
       - uses: actions/setup-python@v5
         id: setup-python-step
         with:
           python-version-file: .python-version
-      - name: Python Poetry Action
-        uses: abatilo/actions-poetry@v3
-        with:
-          poetry-version: latest
+
         # Enable tmate debugging of manually-triggered workflows if the input option was provided
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3

@@ -11,7 +11,7 @@ from md2enex.md2enex import app
 FIXED_TIME = "2024-10-18 09:00:01"
 freezer = freeze_time(FIXED_TIME)
 freezer.start()
-runner = CliRunner(mix_stderr=False)
+runner = CliRunner()
 
 
 # Monkeypatch a fixture to fix system file time calls
@@ -24,6 +24,12 @@ def _mock_times(monkeypatch):
     monkeypatch.setattr(md2enex.md2enex, "creation_date_seconds", lambda _: CREATION_TIME)
     # Patch mtime here
     monkeypatch.setattr(os.path, "getmtime", lambda _: MODIFICATION_TIME)
+
+
+@pytest.fixture(autouse=True)
+def _mock_version(monkeypatch):
+    """Patches the version to a fixed value for testing"""
+    md2enex.md2enex.Appconfig.APP_VERSION._value_ = "0.3"
 
 
 def compare_files(file1: str, file2: str):
