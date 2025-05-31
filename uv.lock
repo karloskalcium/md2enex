@@ -120,7 +120,6 @@ dependencies = [
     { name = "lxml" },
     { name = "pypandoc-binary" },
     { name = "python-frontmatter" },
-    { name = "pyyaml" },
     { name = "typer" },
 ]
 
@@ -136,7 +135,6 @@ requires-dist = [
     { name = "lxml", specifier = ">=5.2.1,<6" },
     { name = "pypandoc-binary", specifier = "~=1.13" },
     { name = "python-frontmatter", specifier = ">=1.0.0,<2" },
-    { name = "pyyaml", specifier = ">=6.0.1,<7" },
     { name = "typer", specifier = ">=0.16.0" },
 ]
 
