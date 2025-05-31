@@ -11,7 +11,7 @@ from md2enex.md2enex import app
 FIXED_TIME = "2024-10-18 09:00:01"
 freezer = freeze_time(FIXED_TIME)
 freezer.start()
-runner = CliRunner(mix_stderr=False)
+runner = CliRunner()
 
 
 # Monkeypatch a fixture to fix system file time calls
