@@ -10,7 +10,7 @@
 
 ## Audio
 
-![audio.wav alt](attachments/audio.wav "audio.wav")
+![audio.mp3 alt](attachments/audio.mp3 "audio.mp3")
 
 ## Missing audio
 
