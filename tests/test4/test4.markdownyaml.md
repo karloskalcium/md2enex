@@ -5,6 +5,7 @@ tags:
   - yaml
   - markdown
   - test
+keywords: keywords, should, work
 ---
 # markdown-with-yaml
 1. test
