@@ -1,4 +1,4 @@
-FROM python:3.12.7-slim AS base
+FROM python:3.13.3-slim AS base
 WORKDIR /app
 ENV PATH="/app/.venv/bin:$PATH"
 RUN apt-get update \

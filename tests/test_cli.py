@@ -26,6 +26,12 @@ def _mock_times(monkeypatch):
     monkeypatch.setattr(os.path, "getmtime", lambda _: MODIFICATION_TIME)
 
 
+@pytest.fixture(autouse=True)
+def _mock_version(monkeypatch):
+    """Patches the version to a fixed value for testing"""
+    md2enex.md2enex.Appconfig.APP_VERSION._value_ = "0.3"
+
+
 def compare_files(file1: str, file2: str):
     # easier to use diff here since it has a built in function to strip newlines
     # so that the tests work on all platforms

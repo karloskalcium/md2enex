@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/karloskalcium/md2enex/actions/workflows/ci.yaml/badge.svg?branch=master)](https://github.com/karloskalcium/md2enex/actions/workflows/ci.yaml)
 [![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/karloskalcium/md2enex/master/LICENSE)
-[![PYTHON](https://img.shields.io/badge/python-3.12-orange.svg)](https://docs.python.org/3.12/index.html)
+[![PYTHON](https://img.shields.io/badge/python-3.13-orange.svg)](https://docs.python.org/3.13/index.html)
 
 `md2enex` is a command-line tool that converts a directory of markdown files to an Evernote `.enex` export format, that can then be imported into Evernote.
 
@@ -17,7 +17,7 @@
 
 ### Install python and pipx
 
-1. Install `python` verion 3.12 or later: [Instructions](https://www.python.org/downloads/)
+1. Install `python` version 3.13: [Instructions](https://www.python.org/downloads/)
 1. Install `pipx`: [Instructions](https://pipx.pypa.io/stable/installation/)
 
 ### Install md2enex
@@ -71,7 +71,7 @@ You can also ask a question in the [discussions section](https://github.com/karl
 
 ## Contributing
 
-This project uses [Poetry](https://python-poetry.org/) for packaging and dependency management.
+This project uses [uv](https://docs.astral.sh/uv/) for packaging and dependency management.
 
 Most of the things you need to do are targets in the makefile.
 

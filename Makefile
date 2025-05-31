@@ -1,4 +1,4 @@
-# Makefile for wtf-bot
+# Makefile for md2enex
 # Tested with GNU Make 3.8.1
 MAKEFLAGS += --warn-undefined-variables
 ifeq ($(OS),Windows_NT)
@@ -10,7 +10,7 @@ endif
 .DEFAULT_GOAL := help
 
 INSTALL_STAMP := .install.stamp
-POETRY := $(shell command -v poetry 2> /dev/null)
+UV := $(shell command -v uv 2> /dev/null)
 
 # cribbed from https://github.com/mozilla-services/telescope/blob/main/Makefile
 .PHONY: help
@@ -20,11 +20,11 @@ help:  ## Prints out documentation for available commands
 	@echo "Check the Makefile to know exactly what each target is doing."
 
 install: $(INSTALL_STAMP)  ## Install dependencies
-$(INSTALL_STAMP): pyproject.toml poetry.lock
-	@echo "$(POETRY)"
-	@if [[ -z "$(POETRY)" ]]; then echo "Poetry could not be found. See https://python-poetry.org/docs/"; exit 2; fi
-	"$(POETRY)" --version
-	"$(POETRY)" install
+$(INSTALL_STAMP): pyproject.toml uv.lock
+	@echo "$(UV)"
+	@if [[ -z "$(UV)" ]]; then echo "uv could not be found. See https://docs.astral.sh/uv/"; exit 2; fi
+	"$(UV)" --version
+	"$(UV)" sync
 	touch $(INSTALL_STAMP)
 
 .PHONY: test
@@ -32,17 +32,17 @@ test: $(INSTALL_STAMP) lint unit-test  ## Runs all linting and unit tests
 
 .PHONY: unit-test
 unit-test: $(INSTALL_STAMP)  ## Runs python unit tests
-	"$(POETRY)" run pytest --cov --cov-report term --cov-report html
+	"$(UV)" run pytest --cov --cov-report term --cov-report html
 
 .PHONY: lint
 lint: $(INSTALL_STAMP)  ## Analyze code base
-	"$(POETRY)" run ruff check
-	"$(POETRY)" run ruff format --check
+	"$(UV)" run ruff check
+	"$(UV)" run ruff format --check
 
 .PHONY: format
 format: $(INSTALL_STAMP)  ## Format code base
-	"$(POETRY)" run ruff check --fix
-	"$(POETRY)" run ruff format
+	"$(UV)" run ruff check --fix
+	"$(UV)" run ruff format
 
 .PHONY: clean
 clean:  ## Delete any directories, files or logs that are auto-generated
@@ -51,6 +51,8 @@ clean:  ## Delete any directories, files or logs that are auto-generated
 	rm -rf results dist .ruff_cache .pytest_cache export.enex
 
 .PHONY: deepclean
-deepclean: clean  ## Delete all poetry environments
-	"$(POETRY)" env remove --all -n
-	@echo poetry environments were deleted. Type 'deactivate' to deactivate the shims or 'exit' to exit the poetry shell.
+deepclean: clean  ## Clean all temp files and empty UV caches and virtual environments
+	rm -rf .venv/
+	"$(UV)" cache clean
+	"$(UV)" cache prune
+	@echo UV cache and virtual environments were cleaned.
