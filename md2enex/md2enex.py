@@ -38,6 +38,7 @@ class Doctypes(Enum):
 
 
 # taken from here https://dev.evernote.com/doc/articles/enml.php
+# Note: embed was removed, as we process those tags and convert them to en-media
 INVALID_TAGS = [
     "applet",
     "base",
@@ -47,7 +48,6 @@ INVALID_TAGS = [
     "body",
     "button",
     "dir",
-    "embed",
     "fieldset",
     "figcaption",  # Remove figure captions as they're not supported in ENML
     "form",
@@ -83,6 +83,7 @@ INVALID_TAGS = [
 INVALID_ATTRIBUTES = [
     "id",
     "class",
+    "controls", # can show up in video/audio tags, but not supported in ENML
     "onclick",
     "ondblclick",
     "on*",
@@ -200,9 +201,13 @@ def validate_note_xml(note_xml: bytes):
 def add_resources(en_note_el: etree.Element, base_dir: str) -> list:
     """Extracts and adds resources from the en-note element, converting img/video/audio/embed tags to en-media tags."""
     resources = []
-    # Find all media tags (img, video, audio) and convert them to en-media tags
+    # Log the parsed XML before running XPath
+    logging.debug("en_note_el XML before XPath: " + etree.tostring(en_note_el, encoding="unicode"))
+    # Find all media tags (img, video, audio, embed) and convert them to en-media tags
     # Use a union of XPath expressions to find multiple tag types
+    logging.debug(f"Processing media tags in en-note element from base directory: {base_dir}")
     for media_tag in en_note_el.xpath(".//img | .//video | .//audio | .//embed"):
+        logging.debug("Processing media tag: " + etree.tostring(media_tag, encoding="unicode"))
         if "src" not in media_tag.attrib:
             continue
 
@@ -210,6 +215,7 @@ def add_resources(en_note_el: etree.Element, base_dir: str) -> list:
         src = unquote(media_tag.attrib["src"])
         # Make path relative to the markdown file's directory
         full_path = os.path.join(base_dir, src)
+        logging.debug("Full path for media file: " + full_path)
         if not os.path.exists(full_path):
             typer.secho(f"Media file not found: {full_path}", err=True, fg="yellow")
             continue
@@ -278,6 +284,11 @@ def add_resources(en_note_el: etree.Element, base_dir: str) -> list:
             for child in figure:
                 parent.insert(parent.index(figure), child)
             parent.remove(figure)
+
+    # If there were issues processing any of the media tags, they will remain in the output.
+    # Thus we rename them to img since that is still allowed in ENML.
+    for rename_media_tag in en_note_el.xpath(".//video | .//audio | .//embed"):
+        rename_media_tag.tag = "img"
 
     return resources
 

@@ -23,3 +23,8 @@ This is a gif:
 
 This is a png:
 ![image-4-alt](images/image-4.png "Image 4")
+
+## Missing image
+
+This is a missing image:
+![missing-alt](images/missing.jpg "Missing image")
