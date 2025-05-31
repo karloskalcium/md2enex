@@ -11,7 +11,7 @@
 - Preserves file creation dates and modification dates
 - Preserves file titles
 - Preserves formatting
-- Supports embedded images
+- Supports embedded images, video, audio, and attachments
 - Works on Mac, Windows, and Linux
 
 ## Install
@@ -45,7 +45,7 @@ You can get additional help by running:
 md2enex -h
 ```
 
-## Markdown formatting notes
+## Markdown formatting and conversion details
 
 This tool uses [`pandoc`](https://pandoc.org/) to convert Markdown to HTML, and then converts that HTML to [ENML](http://xml.evernote.com/pub/enml2.dtd) (stripping some tags in the process), and then embeds this into the [ENEX](http://xml.evernote.com/pub/evernote-export4.dtd) import/export format created by Evernote.
 
@@ -53,15 +53,17 @@ I used [`Exporter`](http://falcon.star-lord.me/exporter/) to export notes from A
 
 Additionally, `Exporter` adds the title of the note as a top-level header in the note itself. This is not needed in Evernote, so if the first line of a note is a `<h1>` header, it is removed.
 
-### Image Support
+## Attachments Support
 
-This tool supports embedding images from your Markdown files into Evernote notes. Images are referenced in your Markdown using standard Markdown image syntax:
+This tool supports embedding images and other media from your Markdown files into Evernote notes. Media are referenced in your Markdown using standard Markdown image syntax:
 
 ```markdown
-![Alt text](path/to/image.jpg "Optional title")
+![Alt text](path/to/media.jpg "Optional title")
 ```
 
-The image path should be relative to the Markdown file's location. When the file is converted, the images will be properly embedded in the Evernote note as resources with the correct MIME type. Note that other types of embedded media are not currently supported.
+The media path should be relative to the Markdown file's location. When the file is converted, the media will be properly embedded in the Evernote note as resources with the correct MIME type.
+
+## Evernote import considerations
 
 A warning: Evernote can be finicky about notes; if notes have any unknown/unsupported tags in them, they can successfully import, and then they will disappear silently at some point (perhaps when they sync to the server?). So even though this tool tries to validate the import against the Evernote DTD, to be extra safe, check the number of notes at import, and confirm that same number of notes remains in Evernote after syncing/refreshing/closing/restarting. If notes disappear, it's probably because of some strange syntax that made its way from Markdown into the generated HTML and that Evernote does not accept.
 
