@@ -49,6 +49,7 @@ INVALID_TAGS = [
     "dir",
     "embed",
     "fieldset",
+    "figcaption",  # Remove figure captions as they're not supported in ENML
     "form",
     "frame",
     "frameset",
@@ -256,9 +257,11 @@ def add_resources(en_note_el: etree.Element, base_dir: str) -> list:
         hash_value = hashlib.md5(image_data).hexdigest()
         en_media.set("hash", hash_value)
 
-        # Copy alt text if present
+        # Set title and alt text as title attribute
+        if "title" in img.attrib:
+            en_media.set("title", img.attrib["title"])
         if "alt" in img.attrib:
-            en_media.text = img.attrib["alt"]
+            en_media.set("alt", img.attrib["alt"])
 
         # Replace img with en-media
         parent = img.getparent()
@@ -286,6 +289,8 @@ def create_note_content(file: str) -> etree.Element:
         file, to="html", format="markdown+emoji+hard_line_breaks-smart-auto_identifiers", extra_args=["--wrap=none"]
     )
 
+    logging.debug("HTML text from pandoc conversion: " + html_text)
+
     for index, line in enumerate(html_text.splitlines()):
         line_trimmed = line.strip()
         # skip h1 tag from first line, if present, as this is likely the title
@@ -309,6 +314,7 @@ def create_note_content(file: str) -> etree.Element:
         doctype=Doctypes.ENML_DOCTYPE.value,
     )
 
+    logging.debug("EN Note XML: " + en_note_bytes.decode("utf-8"))
     validate_note_xml(en_note_bytes)
 
     content_el = etree.Element("content")
