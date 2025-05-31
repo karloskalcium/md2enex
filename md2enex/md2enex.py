@@ -83,7 +83,7 @@ INVALID_TAGS = [
 INVALID_ATTRIBUTES = [
     "id",
     "class",
-    "controls", # can show up in video/audio tags, but not supported in ENML
+    "controls",  # can show up in video/audio tags, but not supported in ENML
     "onclick",
     "ondblclick",
     "on*",
