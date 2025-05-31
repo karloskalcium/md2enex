@@ -85,11 +85,11 @@ def test_test5():
 
 
 @freeze_time(FIXED_TIME)
-def test_testimg():
-    path = "tests/test-img"
+def test_testmedia():
+    path = "tests/test-media"
     result = runner.invoke(app, [path])
     assert result.exit_code == 0
-    assert "Successfully wrote 1 markdown files to export.enex" in result.stderr
+    assert "Successfully wrote 3 markdown files to export.enex" in result.stderr
     assert compare_files(f"{path}/target.enex", "export.enex")
 
 

@@ -198,25 +198,25 @@ def validate_note_xml(note_xml: bytes):
 
 
 def add_resources(en_note_el: etree.Element, base_dir: str) -> list:
-    """Extracts and adds resources from the en-note element, converting img tags to en-media tags."""
+    """Extracts and adds resources from the en-note element, converting img/video/audio/embed tags to en-media tags."""
     resources = []
-    # Convert img tags to en-media tags and create resources
-    # TODO: Eventually we can look for other tags and convert them to en-media as well, e.g. audio, video, etc.
-    for img in en_note_el.findall(".//img"):
-        if "src" not in img.attrib:
+    # Find all media tags (img, video, audio) and convert them to en-media tags
+    # Use a union of XPath expressions to find multiple tag types
+    for media_tag in en_note_el.xpath(".//img | .//video | .//audio | .//embed"):
+        if "src" not in media_tag.attrib:
             continue
 
         # Decode URL-encoded path and make it relative to the markdown file
-        src = unquote(img.attrib["src"])
+        src = unquote(media_tag.attrib["src"])
         # Make path relative to the markdown file's directory
         full_path = os.path.join(base_dir, src)
         if not os.path.exists(full_path):
-            logging.warning(f"Image file not found: {full_path}")
+            typer.secho(f"Media file not found: {full_path}", err=True, fg="yellow")
             continue
 
         # Read image file
         with open(full_path, "rb") as f:
-            image_data = f.read()
+            media_data = f.read()
 
         # Extract mime type
         mime_type = mimetypes.guess_type(full_path)[0]
@@ -224,7 +224,7 @@ def add_resources(en_note_el: etree.Element, base_dir: str) -> list:
             mime_type = "image/jpeg"  # default to jpeg if type can't be determined
 
         # Convert to base64
-        base64_data = base64.b64encode(image_data).decode("utf-8")
+        base64_data = base64.b64encode(media_data).decode("utf-8")
 
         # Create resource element
         resource = etree.Element("resource")
@@ -241,32 +241,32 @@ def add_resources(en_note_el: etree.Element, base_dir: str) -> list:
         resource.append(mime_el)
 
         # Add width and height if available
-        if "width" in img.attrib:
+        if "width" in media_tag.attrib:
             width_el = etree.Element("width")
-            width_el.text = img.attrib["width"]
+            width_el.text = media_tag.attrib["width"]
             resource.append(width_el)
-        if "height" in img.attrib:
+        if "height" in media_tag.attrib:
             height_el = etree.Element("height")
-            height_el.text = img.attrib["height"]
+            height_el.text = media_tag.attrib["height"]
             resource.append(height_el)
 
         # Create en-media element
         en_media = etree.Element("en-media")
         en_media.set("type", mime_type)
         # Use MD5 hash of image data as the hash attribute
-        hash_value = hashlib.md5(image_data).hexdigest()
+        hash_value = hashlib.md5(media_data).hexdigest()
         en_media.set("hash", hash_value)
 
         # Set title and alt text as title attribute
-        if "title" in img.attrib:
-            en_media.set("title", img.attrib["title"])
-        if "alt" in img.attrib:
-            en_media.set("alt", img.attrib["alt"])
+        if "title" in media_tag.attrib:
+            en_media.set("title", media_tag.attrib["title"])
+        if "alt" in media_tag.attrib:
+            en_media.set("alt", media_tag.attrib["alt"])
 
-        # Replace img with en-media
-        parent = img.getparent()
+        # Replace media tags with en-media
+        parent = media_tag.getparent()
         if parent is not None:
-            parent.replace(img, en_media)
+            parent.replace(media_tag, en_media)
             # Add resource to list
             resources.append(resource)
 
@@ -435,7 +435,7 @@ def cli(
     ] = None,
 ):
     """Converts all markdown files in a directory into a single .enex file for importing to Evernote."""
-    # logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG)
     set_xml_catalog_var()
     write_enex(directory, str(output))
 
