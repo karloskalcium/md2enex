@@ -444,9 +444,19 @@ def cli(
         Optional[bool],  # noqa: UP007
         typer.Option("--version", "-v", callback=version_callback, help="Program version number"),
     ] = None,
+    debug: Annotated[
+        bool,
+        typer.Option(
+            "--debug",
+            "-d",
+            help="Enable debug logging",
+            is_flag=True,
+        ),
+    ] = False,
 ):
     """Converts all markdown files in a directory into a single .enex file for importing to Evernote."""
-    logging.basicConfig(level=logging.DEBUG)
+
+    logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
     set_xml_catalog_var()
     write_enex(directory, str(output))
 
