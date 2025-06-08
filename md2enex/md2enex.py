@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Annotated, Optional
 from urllib.parse import unquote
 
+import frontmatter
 import pypandoc
 import typer
 from lxml import etree
@@ -172,6 +173,59 @@ def set_xml_catalog_var():
     os.environ["XML_CATALOG_FILES"] = catalog_path
 
 
+def extract_yaml_frontmatter(file: str) -> tuple[dict | None, str]:
+    """
+    Extract YAML frontmatter from a markdown file using python-frontmatter library.
+    Returns a tuple of (frontmatter_dict, content_without_frontmatter)
+    """
+    try:
+        # Parse the file with python-frontmatter
+        post = frontmatter.load(file)
+        # Return the metadata as a dictionary and the content
+        return post.metadata, post.content
+    except Exception as e:
+        logging.warning(f"Error parsing frontmatter: {e}")
+        # If there's an error, return None for frontmatter and the original content
+        with open(file, encoding="utf-8") as f:
+            content = f.read()
+        return None, content
+
+
+def create_tags_from_frontmatter(frontmatter: dict) -> list[etree.Element]:
+    """
+    Create tag elements from YAML frontmatter.
+    Looks for 'tags' or 'keywords' in the frontmatter and creates tag elements.
+    """
+    tag_elements = []
+
+    # Look for tags in the frontmatter
+    tags = []
+    if frontmatter:
+        # Check for tags field
+        if "tags" in frontmatter:
+            if isinstance(frontmatter["tags"], list):
+                tags.extend(frontmatter["tags"])
+            else:
+                # If it's a string, split by commas or spaces
+                tags.extend([t.strip() for t in str(frontmatter["tags"]).split(",")])
+
+        # Check for keywords field (alternative to tags)
+        if "keywords" in frontmatter:
+            if isinstance(frontmatter["keywords"], list):
+                tags.extend(frontmatter["keywords"])
+            else:
+                tags.extend([t.strip() for t in str(frontmatter["keywords"]).split(",")])
+
+    # Create tag elements
+    for tag_text in tags:
+        if tag_text and tag_text.strip():
+            tag_el = etree.Element("tag")
+            tag_el.text = tag_text.strip()
+            tag_elements.append(tag_el)
+
+    return tag_elements
+
+
 def strip_note_el(en_note_el: etree.Element):
     """Strips out invalid attributes and tags per https://dev.evernote.com/doc/articles/enml.php"""
     etree.strip_attributes(en_note_el, *INVALID_ATTRIBUTES)
@@ -293,12 +347,28 @@ def add_resources(en_note_el: etree.Element, base_dir: str) -> list:
     return resources
 
 
-def create_note_content(file: str) -> etree.Element:
+def create_note_content(file: str) -> tuple[etree.Element, list, dict | None]:
+    # Extract frontmatter using python-frontmatter
+    frontmatter_data, markdown_content = extract_yaml_frontmatter(file)
+
+    # Process the markdown content
     content_text = ""
-    # set hard_line_breaks here b/c the Exporter on OSX doesn't add proper line breaks in the Markdown export
-    html_text = pypandoc.convert_file(
-        file, to="html", format="markdown+emoji+hard_line_breaks-smart-auto_identifiers", extra_args=["--wrap=none"]
-    )
+
+    # If we have frontmatter, we need to process just the content
+    # to avoid frontmatter appearing in the note
+    if frontmatter_data:
+        # Convert the markdown content directly using pypandoc.convert_text
+        html_text = pypandoc.convert_text(
+            markdown_content,
+            to="html",
+            format="markdown+emoji+hard_line_breaks-smart-auto_identifiers",
+            extra_args=["--wrap=none"],
+        )
+    else:
+        # No frontmatter, process the whole file
+        html_text = pypandoc.convert_file(
+            file, to="html", format="markdown+emoji+hard_line_breaks-smart-auto_identifiers", extra_args=["--wrap=none"]
+        )
 
     logging.debug("HTML text from pandoc conversion: " + html_text)
 
@@ -332,18 +402,26 @@ def create_note_content(file: str) -> etree.Element:
     content_el.text = etree.CDATA(en_note_bytes.decode("utf-8"))
 
     # Return both content and resources
-    return content_el, resources
+    return content_el, resources, frontmatter_data
 
 
 def process_note(file: str) -> etree.Element:
     note_el = etree.Element("note")
 
     note_el.append(create_title(file))
-    content_el, resources = create_note_content(file)
+    content_el, resources, frontmatter = create_note_content(file)
     note_el.append(content_el)
     note_el.append(create_creation_date(file))
     note_el.append(create_updated_date(file))
+
+    # Add the default tag
     note_el.append(create_tag())
+
+    # Add tags from frontmatter if available
+    if frontmatter:
+        for tag_el in create_tags_from_frontmatter(frontmatter):
+            note_el.append(tag_el)
+
     note_el.append(create_note_attributes())
 
     # Add resources to note

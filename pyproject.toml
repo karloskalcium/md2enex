@@ -10,6 +10,7 @@ dependencies = [
     "lxml>=5.2.1,<6",
     "pypandoc-binary~=1.13",
     "typer>=0.16.0",
+    "python-frontmatter>=1.0.0,<2",
 ]
 
 [project.urls]
