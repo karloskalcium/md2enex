@@ -61,8 +61,8 @@ def test_test2():
 def test_test3():
     path = "tests/test3"
     result = runner.invoke(app, [path])
-    assert result.exit_code == 1
-    assert "these need to be cleaned up manually and reimported:" in result.stderr
+    assert result.exit_code == 0
+    assert "Successfully wrote 2 markdown files to export.enex" in result.stderr
     assert compare_files(f"{path}/target.enex", "export.enex")
 
 
@@ -81,6 +81,15 @@ def test_test5():
     result = runner.invoke(app, [path])
     assert result.exit_code == 0
     assert "Successfully wrote 1 markdown files to export.enex" in result.stderr
+    assert compare_files(f"{path}/target.enex", "export.enex")
+
+
+@freeze_time(FIXED_TIME)
+def test_testmedia():
+    path = "tests/test-media"
+    result = runner.invoke(app, [path])
+    assert result.exit_code == 0
+    assert "Successfully wrote 3 markdown files to export.enex" in result.stderr
     assert compare_files(f"{path}/target.enex", "export.enex")
 
 

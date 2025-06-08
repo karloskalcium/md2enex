@@ -4,9 +4,12 @@ Script to convert all markdown files in provided directory to a single .enex fil
 (c) 2022, 2023, 2024 Karl Brown
 """
 
+import base64
 import datetime
+import hashlib
 import importlib.metadata
 import logging
+import mimetypes
 import os
 import os.path
 import pathlib
@@ -16,6 +19,7 @@ from enum import Enum
 from inspect import getsourcefile
 from pathlib import Path
 from typing import Annotated, Optional
+from urllib.parse import unquote
 
 import pypandoc
 import typer
@@ -34,6 +38,7 @@ class Doctypes(Enum):
 
 
 # taken from here https://dev.evernote.com/doc/articles/enml.php
+# Note: embed was removed, as we process those tags and convert them to en-media
 INVALID_TAGS = [
     "applet",
     "base",
@@ -43,8 +48,8 @@ INVALID_TAGS = [
     "body",
     "button",
     "dir",
-    "embed",
     "fieldset",
+    "figcaption",  # Remove figure captions as they're not supported in ENML
     "form",
     "frame",
     "frameset",
@@ -78,6 +83,7 @@ INVALID_TAGS = [
 INVALID_ATTRIBUTES = [
     "id",
     "class",
+    "controls",  # can show up in video/audio tags, but not supported in ENML
     "onclick",
     "ondblclick",
     "on*",
@@ -87,6 +93,7 @@ INVALID_ATTRIBUTES = [
     "data-emoji",
     "dynsrc",
     "tabindex",
+    "aria-hidden",
 ]
 
 app = typer.Typer(add_completion=False)
@@ -191,9 +198,99 @@ def validate_note_xml(note_xml: bytes):
         os.chdir(working_directory)
 
 
-def check_invalid_tags(en_note_el: etree.Element):
-    if len(en_note_el.findall(".//img")) or len(en_note_el.findall(".//figure")):
-        raise etree.LxmlSyntaxError("Found image tags - skipping...")
+def add_resources(en_note_el: etree.Element, base_dir: str) -> list:
+    """Extracts and adds resources from the en-note element, converting img/video/audio/embed tags to en-media tags."""
+    resources = []
+    # Log the parsed XML before running XPath
+    logging.debug("en_note_el XML before XPath: " + etree.tostring(en_note_el, encoding="unicode"))
+    # Find all media tags (img, video, audio, embed) and convert them to en-media tags
+    # Use a union of XPath expressions to find multiple tag types
+    logging.debug(f"Processing media tags in en-note element from base directory: {base_dir}")
+    for media_tag in en_note_el.xpath(".//img | .//video | .//audio | .//embed"):
+        logging.debug("Processing media tag: " + etree.tostring(media_tag, encoding="unicode"))
+        if "src" not in media_tag.attrib:
+            continue
+
+        # Decode URL-encoded path and make it relative to the markdown file
+        src = unquote(media_tag.attrib["src"])
+        # Make path relative to the markdown file's directory
+        full_path = os.path.join(base_dir, src)
+        logging.debug("Full path for media file: " + full_path)
+        if not os.path.exists(full_path):
+            typer.secho(f"Media file not found: {full_path}", err=True, fg="yellow")
+            continue
+
+        # Read image file
+        with open(full_path, "rb") as f:
+            media_data = f.read()
+
+        # Extract mime type
+        mime_type = mimetypes.guess_type(full_path)[0]
+        if not mime_type:
+            mime_type = "image/jpeg"  # default to jpeg if type can't be determined
+
+        # Convert to base64
+        base64_data = base64.b64encode(media_data).decode("utf-8")
+
+        # Create resource element
+        resource = etree.Element("resource")
+
+        # Add data element with base64-encoded image
+        data_el = etree.Element("data")
+        data_el.text = base64_data
+        data_el.set("encoding", "base64")
+        resource.append(data_el)
+
+        # Add mime type
+        mime_el = etree.Element("mime")
+        mime_el.text = mime_type
+        resource.append(mime_el)
+
+        # Add width and height if available
+        if "width" in media_tag.attrib:
+            width_el = etree.Element("width")
+            width_el.text = media_tag.attrib["width"]
+            resource.append(width_el)
+        if "height" in media_tag.attrib:
+            height_el = etree.Element("height")
+            height_el.text = media_tag.attrib["height"]
+            resource.append(height_el)
+
+        # Create en-media element
+        en_media = etree.Element("en-media")
+        en_media.set("type", mime_type)
+        # Use MD5 hash of image data as the hash attribute
+        hash_value = hashlib.md5(media_data).hexdigest()
+        en_media.set("hash", hash_value)
+
+        # Set title and alt text as title attribute
+        if "title" in media_tag.attrib:
+            en_media.set("title", media_tag.attrib["title"])
+        if "alt" in media_tag.attrib:
+            en_media.set("alt", media_tag.attrib["alt"])
+
+        # Replace media tags with en-media
+        parent = media_tag.getparent()
+        if parent is not None:
+            parent.replace(media_tag, en_media)
+            # Add resource to list
+            resources.append(resource)
+
+    # Remove figure tags but keep their content
+    for figure in en_note_el.findall(".//figure"):
+        parent = figure.getparent()
+        if parent is not None:
+            # Move all children of figure to its parent
+            for child in figure:
+                parent.insert(parent.index(figure), child)
+            parent.remove(figure)
+
+    # If there were issues processing any of the media tags, they will remain in the output.
+    # Thus we rename them to img since that is still allowed in ENML.
+    for rename_media_tag in en_note_el.xpath(".//video | .//audio | .//embed"):
+        rename_media_tag.tag = "img"
+
+    return resources
 
 
 def create_note_content(file: str) -> etree.Element:
@@ -202,6 +299,9 @@ def create_note_content(file: str) -> etree.Element:
     html_text = pypandoc.convert_file(
         file, to="html", format="markdown+emoji+hard_line_breaks-smart-auto_identifiers", extra_args=["--wrap=none"]
     )
+
+    logging.debug("HTML text from pandoc conversion: " + html_text)
+
     for index, line in enumerate(html_text.splitlines()):
         line_trimmed = line.strip()
         # skip h1 tag from first line, if present, as this is likely the title
@@ -211,6 +311,10 @@ def create_note_content(file: str) -> etree.Element:
 
     en_note_el = etree.XML(f"<en-note>{content_text}</en-note>")
     strip_note_el(en_note_el)
+
+    # Process images and get resources
+    resources = add_resources(en_note_el, os.path.dirname(file))
+
     en_note_bytes = etree.tostring(
         en_note_el,
         encoding="UTF-8",
@@ -221,24 +325,30 @@ def create_note_content(file: str) -> etree.Element:
         doctype=Doctypes.ENML_DOCTYPE.value,
     )
 
+    logging.debug("EN Note XML: " + en_note_bytes.decode("utf-8"))
     validate_note_xml(en_note_bytes)
-    check_invalid_tags(en_note_el)
 
     content_el = etree.Element("content")
     content_el.text = etree.CDATA(en_note_bytes.decode("utf-8"))
 
-    return content_el
+    # Return both content and resources
+    return content_el, resources
 
 
 def process_note(file: str) -> etree.Element:
     note_el = etree.Element("note")
 
     note_el.append(create_title(file))
-    note_el.append(create_note_content(file))
+    content_el, resources = create_note_content(file)
+    note_el.append(content_el)
     note_el.append(create_creation_date(file))
     note_el.append(create_updated_date(file))
     note_el.append(create_tag())
     note_el.append(create_note_attributes())
+
+    # Add resources to note
+    for resource in resources:
+        note_el.append(resource)
 
     return note_el
 
@@ -306,7 +416,7 @@ def write_enex(target_directory: pathlib.Path, output_file: str):
     if count > 0:
         typer.secho("Successfully wrote " + str(count) + " markdown files to " + output_file, err=True)
     else:
-        type.secho("Error - no files written.", err=True, fg="red")
+        typer.secho("Error - no files written.", err=True, fg="red")
         raise typer.Exit(code=2)
 
 
@@ -334,9 +444,19 @@ def cli(
         Optional[bool],  # noqa: UP007
         typer.Option("--version", "-v", callback=version_callback, help="Program version number"),
     ] = None,
+    debug: Annotated[
+        bool,
+        typer.Option(
+            "--debug",
+            "-d",
+            help="Enable debug logging",
+            is_flag=True,
+        ),
+    ] = False,
 ):
     """Converts all markdown files in a directory into a single .enex file for importing to Evernote."""
-    # logging.basicConfig(level=logging.DEBUG)
+
+    logging.basicConfig(level=logging.DEBUG if debug else logging.INFO)
     set_xml_catalog_var()
     write_enex(directory, str(output))
 
