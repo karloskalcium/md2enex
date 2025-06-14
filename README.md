@@ -49,7 +49,7 @@ md2enex -h
 
 This tool uses [`pandoc`](https://pandoc.org/) to convert Markdown to HTML, and then converts that HTML to [ENML](http://xml.evernote.com/pub/enml2.dtd) (stripping some tags in the process), and then embeds this into the [ENEX](http://xml.evernote.com/pub/evernote-export4.dtd) import/export format created by Evernote.
 
-I used [`Exporter`](http://falcon.star-lord.me/exporter/) to export notes from Apple Notes app, and since `Exporter` does not add newlines to Markdown, `md2enex` uses the `markdown+hard_line_breaks` option of `pandoc` to ensure proper line spacing; if your Markdown line spacing is correct in the source Markdown files you may want to remove that option in the code.
+I used [`Exporter`](http://falcon.star-lord.me/exporter/) to export notes from Apple Notes app, and since `Exporter` does not add newlines to Markdown, `md2enex` uses the [`+hard_line_breaks`](https://pandoc.org/MANUAL.html#extension-hard_line_breaks) option of `pandoc` to ensure proper line spacing. If your Markdown line spacing is correct in the source Markdown files you may want to remove that option in the `create_note_content` method.
 
 Additionally, `Exporter` adds the title of the note as a top-level header in the note itself. This is not needed in Evernote, so if the first line of a note is a `<h1>` header, it is removed.
 
@@ -62,6 +62,10 @@ This tool supports embedding images and other media from your Markdown files int
 ```
 
 The media path should be relative to the Markdown file's location. When the file is converted, the media will be properly embedded in the Evernote note as resources with the correct MIME type.
+
+## Tags Support
+
+This tool supports tags and keywords embedded in yaml frontmatter and converts them to evernote tags. For example see [this test file](https://raw.githubusercontent.com/karloskalcium/md2enex/refs/heads/master/tests/test4/test4.markdownyaml.md).
 
 ## Evernote import considerations
 
