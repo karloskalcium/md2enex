@@ -11,8 +11,6 @@ import importlib.metadata
 import logging
 import mimetypes
 import os
-import os.path
-import pathlib
 import platform
 import subprocess
 from enum import Enum
@@ -146,10 +144,8 @@ def create_updated_date(file: str) -> etree.Element:
 
 def create_tag() -> etree.Element:
     tag_el = etree.Element("tag")
-    tag_with_datetime = (
-        Appconfig.APP_NAME.value + "-import" + ":" + datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds")
-    )
-    tag_el.text = tag_with_datetime
+    now = datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds")
+    tag_el.text = f"{Appconfig.APP_NAME.value}-import:{now}"
     return tag_el
 
 
@@ -165,7 +161,7 @@ def set_xml_catalog_var():
     # use relative path to avoid Windows error with libxml2 https://gitlab.gnome.org/GNOME/libxml2/-/issues/334
     # This will require changing the working directory during parsing
     catalog_path = "xml_cache/catalog.xml"
-    logging.debug("Catalog path: " + catalog_path)
+    logging.debug(f"Catalog path: {catalog_path}")
     # Set up environment variable for local catalog cache
     os.environ["XML_CATALOG_FILES"] = catalog_path
 
@@ -248,7 +244,7 @@ def validate_note_xml(note_xml: bytes):
         etree.fromstring(note_xml, parser=parser)
     except etree.XMLSyntaxError as err:
         for error in parser.error_log:
-            logging.error(error.message + "at line: " + str(error.line))
+            logging.error(f"{error.message} at line: {error.line}")
 
         raise err
     finally:
@@ -259,12 +255,12 @@ def add_resources(en_note_el: etree.Element, base_dir: str) -> list:
     """Extracts and adds resources from the en-note element, converting img/video/audio/embed tags to en-media tags."""
     resources = []
     # Log the parsed XML before running XPath
-    logging.debug("en_note_el XML before XPath: " + etree.tostring(en_note_el, encoding="unicode"))
+    logging.debug(f"en_note_el XML before XPath: {etree.tostring(en_note_el, encoding='unicode')}")
     # Find all media tags (img, video, audio, embed) and convert them to en-media tags
     # Use a union of XPath expressions to find multiple tag types
     logging.debug(f"Processing media tags in en-note element from base directory: {base_dir}")
     for media_tag in en_note_el.xpath(".//img | .//video | .//audio | .//embed"):
-        logging.debug("Processing media tag: " + etree.tostring(media_tag, encoding="unicode"))
+        logging.debug(f"Processing media tag: {etree.tostring(media_tag, encoding='unicode')}")
         if "src" not in media_tag.attrib:
             continue
 
@@ -272,7 +268,7 @@ def add_resources(en_note_el: etree.Element, base_dir: str) -> list:
         src = unquote(media_tag.attrib["src"])
         # Make path relative to the markdown file's directory
         full_path = os.path.join(base_dir, src)
-        logging.debug("Full path for media file: " + full_path)
+        logging.debug(f"Full path for media file: {full_path}")
         if not os.path.exists(full_path):
             typer.secho(f"Media file not found: {full_path}", err=True, fg="yellow")
             continue
@@ -354,13 +350,9 @@ def create_note_content(file: str) -> tuple[etree.Element, list, dict | None]:
     # Extract frontmatter using python-frontmatter
     frontmatter_data, markdown_content = extract_yaml_frontmatter(file)
 
-    # Process the markdown content
-    content_text = ""
-
     # If we have frontmatter, we need to process just the content
     # to avoid frontmatter appearing in the note
     if frontmatter_data is not None:
-        # Convert the markdown content directly using pypandoc.convert_text
         html_text = pypandoc.convert_text(
             markdown_content,
             to="html",
@@ -368,19 +360,20 @@ def create_note_content(file: str) -> tuple[etree.Element, list, dict | None]:
             extra_args=["--wrap=none"],
         )
     else:
-        # No frontmatter, process the whole file
         html_text = pypandoc.convert_file(
             file, to="html", format="markdown+emoji+hard_line_breaks-smart-auto_identifiers", extra_args=["--wrap=none"]
         )
 
-    logging.debug("HTML text from pandoc conversion: " + html_text)
+    logging.debug(f"HTML text from pandoc conversion: {html_text}")
 
+    lines = []
     for index, line in enumerate(html_text.splitlines()):
-        line_trimmed = line.strip()
+        stripped = line.strip()
         # skip h1 tag from first line, if present, as this is likely the title
-        if index == 0 and line_trimmed.startswith("<h1"):
+        if index == 0 and stripped.startswith("<h1"):
             continue
-        content_text += line_trimmed
+        lines.append(stripped)
+    content_text = "".join(lines)
 
     en_note_el = etree.XML(f"<en-note>{content_text}</en-note>")
     strip_note_el(en_note_el)
@@ -398,7 +391,7 @@ def create_note_content(file: str) -> tuple[etree.Element, list, dict | None]:
         doctype=Doctypes.ENML_DOCTYPE.value,
     )
 
-    logging.debug("EN Note XML: " + en_note_bytes.decode("utf-8"))
+    logging.debug(f"EN Note XML: {en_note_bytes.decode('utf-8')}")
     validate_note_xml(en_note_bytes)
 
     content_el = etree.Element("content")
@@ -438,8 +431,7 @@ def process_note(file: str) -> etree.Element:
 # as required here: http://xml.evernote.com/pub/evernote-export4.dtd
 # assumes a datetime object in UTC timezone
 def enex_date_format(date: datetime.datetime) -> str:
-    date_str = date.strftime("%Y%m%d") + "T" + date.strftime("%H%M%S") + "Z"
-    return date_str
+    return date.strftime("%Y%m%dT%H%M%SZ")
 
 
 # header material for enex format
@@ -453,11 +445,11 @@ def create_en_export() -> etree.Element:
     return en_export
 
 
-def write_enex(target_directory: pathlib.Path, output_file: str):
+def write_enex(target_directory: Path, output_file: str):
     files = sorted(target_directory.glob("*.md"), key=lambda fn: fn.name.lower())
     # Ensure at least one markdown file in directory
-    if len(files) <= 0:
-        typer.secho("No markdown files found in " + target_directory.name, err=True, fg="red")
+    if not files:
+        typer.secho(f"No markdown files found in {target_directory.name}", err=True, fg="red")
         raise typer.Exit(code=1)
 
     # ElementTree object that will contain our xml
@@ -473,7 +465,7 @@ def write_enex(target_directory: pathlib.Path, output_file: str):
             count += 1
         except (etree.LxmlError, ValueError) as e:
             error_list.append(filename)
-            logging.warning("Parsing error " + str(e.__class__) + " occurred with file " + filename)
+            logging.warning(f"Parsing error {e.__class__} occurred with file {filename}")
             logging.warning(e)
 
     tree = etree.ElementTree(root)
@@ -486,16 +478,16 @@ def write_enex(target_directory: pathlib.Path, output_file: str):
         doctype=Doctypes.ENEX_DOCTYPE.value,
     )
 
-    if len(error_list) > 0:
+    if error_list:
         typer.secho(
-            "Some files were skipped - these need to be cleaned up manually and reimported: " + str(error_list),
+            f"Some files were skipped - these need to be cleaned up manually and reimported: {error_list}",
             err=True,
             fg="red",
         )
         raise typer.Exit(code=1)
 
     if count > 0:
-        typer.secho("Successfully wrote " + str(count) + " markdown files to " + output_file, err=True)
+        typer.secho(f"Successfully wrote {count} markdown files to {output_file}", err=True)
     else:
         typer.secho("Error - no files written.", err=True, fg="red")
         raise typer.Exit(code=2)
@@ -503,13 +495,13 @@ def write_enex(target_directory: pathlib.Path, output_file: str):
 
 def version_callback(value: bool):
     if value:
-        typer.echo(Appconfig.APP_NAME.value + " (version " + Appconfig.APP_VERSION.value + ")")
+        typer.echo(f"{Appconfig.APP_NAME.value} (version {Appconfig.APP_VERSION.value})")
         raise typer.Exit(code=0)
 
 
 @app.command(context_settings={"help_option_names": ["-h", "--help"]})
 def cli(
-    directory: Annotated[Path, typer.Argument(exists=True, file_okay=False, dir_okay=True, path_type=pathlib.Path)],
+    directory: Annotated[Path, typer.Argument(exists=True, file_okay=False, dir_okay=True, path_type=Path)],
     output: Annotated[
         Path,
         typer.Option(
@@ -517,12 +509,12 @@ def cli(
             "-o",
             exists=False,
             dir_okay=False,
-            path_type=pathlib.Path,
+            path_type=Path,
             help="Output file name. Existing file will be overwritten.",
         ),
     ] = "export.enex",
     version: Annotated[
-        bool | None,  # noqa: UP007
+        bool | None,
         typer.Option("--version", "-v", callback=version_callback, help="Program version number"),
     ] = None,
     debug: Annotated[
