@@ -7,10 +7,10 @@ requires-python = "~=3.14.0"
 readme = "README.md"
 license = "MIT"
 dependencies = [
-    "lxml>=6.1.0,<7",
-    "pypandoc-binary~=1.13",
-    "typer>=0.16.0",
-    "python-frontmatter>=1.0.0,<2",
+    "lxml~=6.1",
+    "pypandoc-binary~=1.17",
+    "typer~=0.25",
+    "python-frontmatter~=1.1",
 ]
 
 [project.urls]
@@ -21,9 +21,9 @@ md2enex = "md2enex.md2enex:main"
 
 [dependency-groups]
 dev = [
-    "freezegun>=1.5.1,<2",
-    "pytest-cov>=6.1.1",
-    "ruff>=0.11.12",
+    "freezegun~=1.5.5",
+    "pytest-cov~=7.1",
+    "ruff~=0.15",
 ]
 
 [build-system]

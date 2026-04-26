@@ -18,7 +18,7 @@ import subprocess
 from enum import Enum
 from inspect import getsourcefile
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 from urllib.parse import unquote
 
 import frontmatter
@@ -519,7 +519,7 @@ def cli(
         ),
     ] = "export.enex",
     version: Annotated[
-        Optional[bool],  # noqa: UP007
+        bool | None,  # noqa: UP007
         typer.Option("--version", "-v", callback=version_callback, help="Program version number"),
     ] = None,
     debug: Annotated[
@@ -528,7 +528,6 @@ def cli(
             "--debug",
             "-d",
             help="Enable debug logging",
-            is_flag=True,
         ),
     ] = False,
 ):
