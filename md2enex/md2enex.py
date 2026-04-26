@@ -85,9 +85,6 @@ INVALID_ATTRIBUTES = [
     "id",
     "class",
     "controls",  # can show up in video/audio tags, but not supported in ENML
-    "onclick",
-    "ondblclick",
-    "on*",
     "accesskey",
     "data",
     "data-cites",
@@ -150,7 +147,7 @@ def create_updated_date(file: str) -> etree.Element:
 def create_tag() -> etree.Element:
     tag_el = etree.Element("tag")
     tag_with_datetime = (
-        Appconfig.APP_NAME.value + "-import" + ":" + datetime.datetime.now().isoformat(timespec="seconds")
+        Appconfig.APP_NAME.value + "-import" + ":" + datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds")
     )
     tag_el.text = tag_with_datetime
     return tag_el
@@ -229,6 +226,12 @@ def create_tags_from_frontmatter(frontmatter: dict) -> list[etree.Element]:
 def strip_note_el(en_note_el: etree.Element):
     """Strips out invalid attributes and tags per https://dev.evernote.com/doc/articles/enml.php"""
     etree.strip_attributes(en_note_el, *INVALID_ATTRIBUTES)
+    # Strip all on* event handler attributes (onclick, onload, etc.)
+    # etree.strip_attributes does exact matching so a wildcard won't work
+    for el in en_note_el.iter():
+        for attr in list(el.attrib):
+            if attr.startswith("on"):
+                del el.attrib[attr]
     etree.strip_tags(en_note_el, *INVALID_TAGS)
 
 
@@ -356,7 +359,7 @@ def create_note_content(file: str) -> tuple[etree.Element, list, dict | None]:
 
     # If we have frontmatter, we need to process just the content
     # to avoid frontmatter appearing in the note
-    if frontmatter_data:
+    if frontmatter_data is not None:
         # Convert the markdown content directly using pypandoc.convert_text
         html_text = pypandoc.convert_text(
             markdown_content,
@@ -434,7 +437,7 @@ def process_note(file: str) -> etree.Element:
 # returns date in format like this: 20220817T155134Z
 # as required here: http://xml.evernote.com/pub/evernote-export4.dtd
 # assumes a datetime object in UTC timezone
-def enex_date_format(date: datetime) -> str:
+def enex_date_format(date: datetime.datetime) -> str:
     date_str = date.strftime("%Y%m%d") + "T" + date.strftime("%H%M%S") + "Z"
     return date_str
 
@@ -451,7 +454,7 @@ def create_en_export() -> etree.Element:
 
 
 def write_enex(target_directory: pathlib.Path, output_file: str):
-    files = sorted(target_directory.glob("*.md"), key=lambda fn: str.lower(fn.name))
+    files = sorted(target_directory.glob("*.md"), key=lambda fn: fn.name.lower())
     # Ensure at least one markdown file in directory
     if len(files) <= 0:
         typer.secho("No markdown files found in " + target_directory.name, err=True, fg="red")

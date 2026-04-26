@@ -8,7 +8,7 @@
 <en-note><h2>pdf</h2><en-media type="application/pdf" hash="2942bfabb3d05332b66eb128e0842cff" title="doc.pdf"/><h2>missing</h2><img src="attachments/missing.doc" title="missing.doc"/>missing.pdf alt</en-note>]]></content>
     <created>20240101T120000Z</created>
     <updated>20241031T235959Z</updated>
-    <tag>md2enex-import:2024-10-18T09:00:01</tag>
+    <tag>md2enex-import:2024-10-18T09:00:01+00:00</tag>
     <note-attributes>
 </note-attributes>
     <resource>
@@ -23,7 +23,7 @@
 <en-note><h2>image test</h2><p>This is an image:<br/><en-media type="image/jpeg" hash="4de6de7be05035ba410199745e499b1a" title="Image 1" alt="image-1-alt"/></p><h2>Figure test</h2><p>This is a figure:</p><en-media type="image/jpeg" hash="63a074ffc7e1692ebd1d7ec01b09b5c8" title="Image 2" alt="image-2-alt"/><br/>image-2-figcaption<h2>Gif test</h2><p>This is a gif:<br/><en-media type="image/gif" hash="644fafbefa8555f5cdb57f10d2fa0fd3" title="Image 3" alt="image-3-alt"/></p><h2>PNG test</h2><p>This is a png:<br/><en-media type="image/png" hash="64798c0f49b2c035fc12acd92b99e35c" title="Image 4" alt="image-4-alt"/></p><h2>Missing image</h2><p>This is a missing image:<br/><img src="images/missing.jpg" title="Missing image" alt="missing-alt"/></p></en-note>]]></content>
     <created>20240101T120000Z</created>
     <updated>20241031T235959Z</updated>
-    <tag>md2enex-import:2024-10-18T09:00:01</tag>
+    <tag>md2enex-import:2024-10-18T09:00:01+00:00</tag>
     <note-attributes>
 </note-attributes>
     <resource>
@@ -51,7 +51,7 @@
 <en-note><h2>Video</h2><en-media type="video/mp4" hash="b2c7b6706928535b5216f16f72ae0a3f" title="vid.mp4"/><h2>Missing Video</h2><img src="attachments/missing-vid.mp4" title="missing-vid.mp4"><a href="attachments/missing-vid.mp4">missing-vid.mp4 alt</a></img>missing-vid.mp4 alt<h2>Audio</h2><en-media type="audio/mpeg" hash="a714871a87077249611338683922e222" title="audio.mp3"/><h2>Missing audio</h2><img src="attachments/missing-audio.wav" title="missing-audio.wav"><a href="attachments/missing-audio.wav">missing-audio.wav alt</a></img>missing-audio.wav alt</en-note>]]></content>
     <created>20240101T120000Z</created>
     <updated>20241031T235959Z</updated>
-    <tag>md2enex-import:2024-10-18T09:00:01</tag>
+    <tag>md2enex-import:2024-10-18T09:00:01+00:00</tag>
     <note-attributes>
 </note-attributes>
     <resource>

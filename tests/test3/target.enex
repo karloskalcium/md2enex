@@ -8,7 +8,7 @@
 <en-note><p>testing file with difficult name</p><p>testing 123</p></en-note>]]></content>
     <created>20240101T120000Z</created>
     <updated>20241031T235959Z</updated>
-    <tag>md2enex-import:2024-10-18T09:00:01</tag>
+    <tag>md2enex-import:2024-10-18T09:00:01+00:00</tag>
     <note-attributes>
 </note-attributes>
   </note>
@@ -19,7 +19,7 @@
 <en-note><p>test odd characters<br/>'quotes'<br/>"double quotes"<br/>éá &lt;- accents<br/><code>backticks</code><br/>emjois: 😀😁<br/>markdown emojis: <span>😄</span></p></en-note>]]></content>
     <created>20240101T120000Z</created>
     <updated>20241031T235959Z</updated>
-    <tag>md2enex-import:2024-10-18T09:00:01</tag>
+    <tag>md2enex-import:2024-10-18T09:00:01+00:00</tag>
     <note-attributes>
 </note-attributes>
   </note>

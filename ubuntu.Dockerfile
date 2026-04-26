@@ -1,17 +1,12 @@
-FROM python:3.13.3-slim AS base
+FROM python:3.14.3-slim AS base
 WORKDIR /app
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 ENV PATH="/app/.venv/bin:$PATH"
-RUN apt-get update \
-    && apt-get install -y make \
-    && rm -rf /var/lib/apt/lists/*
 
 FROM base AS builder
-RUN pip install poetry
-RUN python -m venv ./.venv
-COPY ./pyproject.toml ./poetry.lock ./
-RUN poetry install --only=main --no-root
+COPY pyproject.toml uv.lock .python-version ./
+RUN uv sync --no-dev --no-install-project
 
 COPY md2enex/ ./md2enex/
-COPY Makefile README.md ./
-COPY tests ./tests/
-RUN poetry install --only-root
+COPY README.md ./
+RUN uv sync --no-dev
