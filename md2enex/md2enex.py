@@ -129,7 +129,6 @@ def set_xml_catalog_var():
     temporarily chdirs to MODULE_DIR so the path resolves at parse time.
     """
     catalog_path = "xml_cache/catalog.xml"
-    logging.debug(f"Catalog path: {catalog_path}")
     os.environ["XML_CATALOG_FILES"] = catalog_path
 
 
@@ -187,7 +186,7 @@ def extract_yaml_frontmatter(file: str) -> tuple[dict | None, str]:
         post = frontmatter.load(file)
         return post.metadata, post.content
     except Exception as e:
-        logging.warning(f"Error parsing frontmatter: {e}")
+        typer.secho(f"Warning: could not parse frontmatter in {file}: {e}", err=True, fg="yellow")
         with open(file, encoding="utf-8") as f:
             content = f.read()
         return None, content
@@ -442,8 +441,7 @@ def write_enex(target_directory: Path, output_file: str):
             count += 1
         except (etree.LxmlError, ValueError) as e:
             error_list.append(filename)
-            logging.warning(f"Parsing error {e.__class__} occurred with file {filename}")
-            logging.warning(e)
+            typer.secho(f"Skipping {filename}: {type(e).__name__}: {e}", err=True, fg="yellow")
 
     tree = etree.ElementTree(root)
     tree.write(
@@ -464,7 +462,7 @@ def write_enex(target_directory: Path, output_file: str):
         raise typer.Exit(code=1)
 
     if count > 0:
-        typer.secho(f"Successfully wrote {count} markdown files to {output_file}", err=True)
+        typer.secho(f"Successfully wrote {count} markdown files to {output_file}", err=True, fg="green")
     else:
         typer.secho("Error - no files written.", err=True, fg="red")
         raise typer.Exit(code=2)
