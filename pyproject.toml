@@ -89,5 +89,8 @@ directory = "results/coverage"
 # Output test results to junit.xml
 addopts = "-vvv --tb=long -ra --junitxml=results/unit/pytest-unit.xml --color=yes"
 testpaths = "tests"
+filterwarnings = [
+    "ignore:codecs.open\\(\\) is deprecated:DeprecationWarning:frontmatter",
+]
 # log_cli = true
 # log_cli_level = "DEBUG"

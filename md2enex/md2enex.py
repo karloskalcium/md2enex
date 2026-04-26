@@ -5,6 +5,7 @@ Script to convert all markdown files in provided directory to a single .enex fil
 """
 
 import base64
+import contextlib
 import datetime
 import hashlib
 import importlib.metadata
@@ -13,7 +14,6 @@ import mimetypes
 import os
 import platform
 import subprocess
-from inspect import getsourcefile
 from pathlib import Path
 from typing import Annotated
 from urllib.parse import unquote
@@ -23,12 +23,13 @@ import pypandoc
 import typer
 from lxml import etree
 
+# === Constants ===
+
 APP_NAME = "md2enex"
 APP_VERSION = importlib.metadata.version("md2enex")
 
 ENEX_DOCTYPE = '<!DOCTYPE en-export SYSTEM "http://xml.evernote.com/pub/evernote-export4.dtd">'
 ENML_DOCTYPE = '<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml3.dtd">'
-
 
 # taken from here https://dev.evernote.com/doc/articles/enml.php
 # Note: embed was removed, as we process those tags and convert them to en-media
@@ -86,16 +87,24 @@ INVALID_ATTRIBUTES = [
     "aria-hidden",
 ]
 
+MODULE_DIR = Path(__file__).parent
+
 app = typer.Typer(add_completion=False)
 
 
-# stolen from https://stackoverflow.com/a/39501288/4907881
-# returns creation date in seconds since Jan 1 1970 for a file in a platform-agnostic fashion
+# === Utilities ===
+
+
+def enex_date_format(date: datetime.datetime) -> str:
+    """Format a UTC datetime as ``20220817T155134Z`` per the ENEX DTD."""
+    return date.strftime("%Y%m%dT%H%M%SZ")
+
+
 def creation_date_seconds(path_to_file) -> float:
     """
     Try to get the date that a file was created, falling back to when it was
     last modified if that isn't possible.
-    See https://stackoverflow.com/a/39501288/1709587 for explanation.
+    See https://stackoverflow.com/a/39501288 for explanation.
     """
     if platform.system() == "Windows":
         return os.path.getctime(path_to_file)
@@ -112,7 +121,23 @@ def creation_date_seconds(path_to_file) -> float:
                 return stat.st_mtime
 
 
+def set_xml_catalog_var():
+    """Point ``XML_CATALOG_FILES`` at the local DTD cache.
+
+    Uses a relative path to work around a libxml2 bug on Windows
+    (https://gitlab.gnome.org/GNOME/libxml2/-/issues/334); ``validate_note_xml``
+    temporarily chdirs to MODULE_DIR so the path resolves at parse time.
+    """
+    catalog_path = "xml_cache/catalog.xml"
+    logging.debug(f"Catalog path: {catalog_path}")
+    os.environ["XML_CATALOG_FILES"] = catalog_path
+
+
+# === Note building pipeline ===
+
+
 def create_title(file: str) -> etree.Element:
+    """Return a ``<title>`` element derived from the file's stem."""
     title = Path(file).stem
     title_el = etree.Element("title")
     # just in case, per DTD, title must have no spaces or line endings
@@ -121,6 +146,7 @@ def create_title(file: str) -> etree.Element:
 
 
 def create_creation_date(file: str) -> etree.Element:
+    """Return a ``<created>`` element with the file's creation timestamp."""
     creation_date_ts = creation_date_seconds(file)
     creation_date = enex_date_format(datetime.datetime.fromtimestamp(creation_date_ts, tz=datetime.UTC))
     created_el = etree.Element("created")
@@ -129,6 +155,7 @@ def create_creation_date(file: str) -> etree.Element:
 
 
 def create_updated_date(file: str) -> etree.Element:
+    """Return an ``<updated>`` element with the file's last-modified timestamp."""
     modification_date_ts = os.path.getmtime(file)
     modification_date = enex_date_format(datetime.datetime.fromtimestamp(modification_date_ts, tz=datetime.UTC))
     updated_el = etree.Element("updated")
@@ -137,6 +164,7 @@ def create_updated_date(file: str) -> etree.Element:
 
 
 def create_tag() -> etree.Element:
+    """Return a ``<tag>`` element marking this import with the current UTC time."""
     tag_el = etree.Element("tag")
     now = datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds")
     tag_el.text = f"{APP_NAME}-import:{now}"
@@ -144,20 +172,10 @@ def create_tag() -> etree.Element:
 
 
 def create_note_attributes() -> etree.Element:
+    """Return an empty ``<note-attributes>`` element matching the standard Evernote export format."""
     note_attributes_el = etree.Element("note-attributes")
-    # to make format match standard Evernote export
     note_attributes_el.text = "\n"
     return note_attributes_el
-
-
-def set_xml_catalog_var():
-    # Sets the XML_CATALOG_FILES variable to our catalog.xml, that points to local cache of DTDs
-    # use relative path to avoid Windows error with libxml2 https://gitlab.gnome.org/GNOME/libxml2/-/issues/334
-    # This will require changing the working directory during parsing
-    catalog_path = "xml_cache/catalog.xml"
-    logging.debug(f"Catalog path: {catalog_path}")
-    # Set up environment variable for local catalog cache
-    os.environ["XML_CATALOG_FILES"] = catalog_path
 
 
 def extract_yaml_frontmatter(file: str) -> tuple[dict | None, str]:
@@ -166,13 +184,10 @@ def extract_yaml_frontmatter(file: str) -> tuple[dict | None, str]:
     Returns a tuple of (frontmatter_dict, content_without_frontmatter)
     """
     try:
-        # Parse the file with python-frontmatter
         post = frontmatter.load(file)
-        # Return the metadata as a dictionary and the content
         return post.metadata, post.content
     except Exception as e:
         logging.warning(f"Error parsing frontmatter: {e}")
-        # If there's an error, return None for frontmatter and the original content
         with open(file, encoding="utf-8") as f:
             content = f.read()
         return None, content
@@ -185,25 +200,20 @@ def create_tags_from_frontmatter(frontmatter: dict) -> list[etree.Element]:
     """
     tag_elements = []
 
-    # Look for tags in the frontmatter
     tags = []
     if frontmatter:
-        # Check for tags field
         if "tags" in frontmatter:
             if isinstance(frontmatter["tags"], list):
                 tags.extend(frontmatter["tags"])
             else:
-                # If it's a string, split by commas or spaces
                 tags.extend([t.strip() for t in str(frontmatter["tags"]).split(",")])
 
-        # Check for keywords field (alternative to tags)
         if "keywords" in frontmatter:
             if isinstance(frontmatter["keywords"], list):
                 tags.extend(frontmatter["keywords"])
             else:
                 tags.extend([t.strip() for t in str(frontmatter["keywords"]).split(",")])
 
-    # Create tag elements
     for tag_text in tags:
         if tag_text and tag_text.strip():
             tag_el = etree.Element("tag")
@@ -226,74 +236,57 @@ def strip_note_el(en_note_el: etree.Element):
 
 
 def validate_note_xml(note_xml: bytes):
-    # For speed, access all XML from local XML CATALOG
-    working_directory = os.getcwd()
+    """Validate note XML against the ENML DTD using local cached DTDs."""
     parser = etree.XMLParser(dtd_validation=True, no_network=True)
-    try:
-        # Due to a libxml2 bug on windows, we need to use a relative path for the DTDs that are packaged with the tool
-        # As such before doing the parsing, we change directory to the module location then change back afterwards
-        # Get the path of where this module lives
-        script_abs_path = os.path.dirname(os.path.abspath(getsourcefile(lambda: 0)))
-        os.chdir(script_abs_path)
-        etree.fromstring(note_xml, parser=parser)
-    except etree.XMLSyntaxError as err:
-        for error in parser.error_log:
-            logging.error(f"{error.message} at line: {error.line}")
-
-        raise err
-    finally:
-        os.chdir(working_directory)
+    # Due to a libxml2 bug on Windows, we need to use a relative path for the
+    # DTDs that are packaged with the tool.  Temporarily chdir to the module
+    # directory so the catalog's relative paths resolve correctly.
+    with contextlib.chdir(MODULE_DIR):
+        try:
+            etree.fromstring(note_xml, parser=parser)
+        except etree.XMLSyntaxError as err:
+            for error in parser.error_log:
+                logging.error(f"{error.message} at line: {error.line}")
+            raise err
 
 
-def add_resources(en_note_el: etree.Element, base_dir: str) -> list:
+def add_resources(en_note_el: etree.Element, base_dir: str) -> list[etree.Element]:
     """Extracts and adds resources from the en-note element, converting img/video/audio/embed tags to en-media tags."""
     resources = []
-    # Log the parsed XML before running XPath
     logging.debug(f"en_note_el XML before XPath: {etree.tostring(en_note_el, encoding='unicode')}")
-    # Find all media tags (img, video, audio, embed) and convert them to en-media tags
-    # Use a union of XPath expressions to find multiple tag types
     logging.debug(f"Processing media tags in en-note element from base directory: {base_dir}")
     for media_tag in en_note_el.xpath(".//img | .//video | .//audio | .//embed"):
         logging.debug(f"Processing media tag: {etree.tostring(media_tag, encoding='unicode')}")
         if "src" not in media_tag.attrib:
             continue
 
-        # Decode URL-encoded path and make it relative to the markdown file
         src = unquote(media_tag.attrib["src"])
-        # Make path relative to the markdown file's directory
         full_path = os.path.join(base_dir, src)
         logging.debug(f"Full path for media file: {full_path}")
         if not os.path.exists(full_path):
             typer.secho(f"Media file not found: {full_path}", err=True, fg="yellow")
             continue
 
-        # Read image file
         with open(full_path, "rb") as f:
             media_data = f.read()
 
-        # Extract mime type
         mime_type = mimetypes.guess_type(full_path)[0]
         if not mime_type:
-            mime_type = "image/jpeg"  # default to jpeg if type can't be determined
+            mime_type = "image/jpeg"
 
-        # Convert to base64
         base64_data = base64.b64encode(media_data).decode("utf-8")
 
-        # Create resource element
         resource = etree.Element("resource")
 
-        # Add data element with base64-encoded image
         data_el = etree.Element("data")
         data_el.text = base64_data
         data_el.set("encoding", "base64")
         resource.append(data_el)
 
-        # Add mime type
         mime_el = etree.Element("mime")
         mime_el.text = mime_type
         resource.append(mime_el)
 
-        # Add width and height if available
         if "width" in media_tag.attrib:
             width_el = etree.Element("width")
             width_el.text = media_tag.attrib["width"]
@@ -303,31 +296,25 @@ def add_resources(en_note_el: etree.Element, base_dir: str) -> list:
             height_el.text = media_tag.attrib["height"]
             resource.append(height_el)
 
-        # Create en-media element
         en_media = etree.Element("en-media")
         en_media.set("type", mime_type)
-        # Use MD5 hash of image data as the hash attribute
         hash_value = hashlib.md5(media_data).hexdigest()
         en_media.set("hash", hash_value)
 
-        # Set title and alt text as title attribute
         if "title" in media_tag.attrib:
             en_media.set("title", media_tag.attrib["title"])
         if "alt" in media_tag.attrib:
             en_media.set("alt", media_tag.attrib["alt"])
 
-        # Replace media tags with en-media
         parent = media_tag.getparent()
         if parent is not None:
             parent.replace(media_tag, en_media)
-            # Add resource to list
             resources.append(resource)
 
     # Remove figure tags but keep their content
     for figure in en_note_el.findall(".//figure"):
         parent = figure.getparent()
         if parent is not None:
-            # Move all children of figure to its parent
             for child in figure:
                 parent.insert(parent.index(figure), child)
             parent.remove(figure)
@@ -340,12 +327,17 @@ def add_resources(en_note_el: etree.Element, base_dir: str) -> list:
     return resources
 
 
-def create_note_content(file: str) -> tuple[etree.Element, list, dict | None]:
-    # Extract frontmatter using python-frontmatter
+def create_note_content(file: str) -> tuple[etree.Element, list[etree.Element], dict | None]:
+    """Convert a markdown file to an ENML ``<content>`` element.
+
+    Extracts YAML frontmatter, converts the remaining markdown to HTML via
+    pandoc, sanitises the HTML into valid ENML, processes embedded media into
+    ENEX resources, and validates the result against the ENML DTD.
+
+    Returns ``(content_element, resources, frontmatter_dict | None)``.
+    """
     frontmatter_data, markdown_content = extract_yaml_frontmatter(file)
 
-    # If we have frontmatter, we need to process just the content
-    # to avoid frontmatter appearing in the note
     if frontmatter_data is not None:
         html_text = pypandoc.convert_text(
             markdown_content,
@@ -372,7 +364,6 @@ def create_note_content(file: str) -> tuple[etree.Element, list, dict | None]:
     en_note_el = etree.XML(f"<en-note>{content_text}</en-note>")
     strip_note_el(en_note_el)
 
-    # Process images and get resources
     resources = add_resources(en_note_el, os.path.dirname(file))
 
     en_note_bytes = etree.tostring(
@@ -391,11 +382,11 @@ def create_note_content(file: str) -> tuple[etree.Element, list, dict | None]:
     content_el = etree.Element("content")
     content_el.text = etree.CDATA(en_note_bytes.decode("utf-8"))
 
-    # Return both content and resources
     return content_el, resources, frontmatter_data
 
 
 def process_note(file: str) -> etree.Element:
+    """Assemble a complete ``<note>`` element from a single markdown file."""
     note_el = etree.Element("note")
 
     note_el.append(create_title(file))
@@ -404,32 +395,25 @@ def process_note(file: str) -> etree.Element:
     note_el.append(create_creation_date(file))
     note_el.append(create_updated_date(file))
 
-    # Add the default tag
     note_el.append(create_tag())
 
-    # Add tags from frontmatter if available
     if frontmatter:
         for tag_el in create_tags_from_frontmatter(frontmatter):
             note_el.append(tag_el)
 
     note_el.append(create_note_attributes())
 
-    # Add resources to note
     for resource in resources:
         note_el.append(resource)
 
     return note_el
 
 
-# returns date in format like this: 20220817T155134Z
-# as required here: http://xml.evernote.com/pub/evernote-export4.dtd
-# assumes a datetime object in UTC timezone
-def enex_date_format(date: datetime.datetime) -> str:
-    return date.strftime("%Y%m%dT%H%M%SZ")
+# === ENEX assembly and CLI ===
 
 
-# header material for enex format
 def create_en_export() -> etree.Element:
+    """Create the top-level ``<en-export>`` element with export metadata."""
     now = datetime.datetime.now(datetime.UTC)
     now_str = enex_date_format(now)
     en_export = etree.Element("en-export")
@@ -440,13 +424,17 @@ def create_en_export() -> etree.Element:
 
 
 def write_enex(target_directory: Path, output_file: str):
+    """Process all markdown files in *target_directory* and write an ENEX file.
+
+    Raises ``typer.Exit(1)`` if the directory contains no ``.md`` files or if
+    any files failed to convert, and ``typer.Exit(2)`` if zero notes were
+    written despite files being present.
+    """
     files = sorted(target_directory.glob("*.md"), key=lambda fn: fn.name.lower())
-    # Ensure at least one markdown file in directory
     if not files:
         typer.secho(f"No markdown files found in {target_directory.name}", err=True, fg="red")
         raise typer.Exit(code=1)
 
-    # ElementTree object that will contain our xml
     root = create_en_export()
 
     count = 0
