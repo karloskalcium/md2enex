@@ -6,8 +6,8 @@ default:
 
 # === Quality ===
 
-# Run all checks (lint, test)
-check: lint unit-test
+# Run all checks (lint, typecheck, test)
+check: lint typecheck test
 
 # Format code base
 format: install
@@ -23,6 +23,10 @@ lint: install
 
 # Runs all tests
 test: unit-test
+
+# Run type checker
+typecheck: install
+    uv run pyright
 
 # Runs python unit tests
 unit-test: install

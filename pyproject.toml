@@ -22,13 +22,20 @@ md2enex = "md2enex.md2enex:main"
 [dependency-groups]
 dev = [
     "freezegun~=1.5.5",
+    "pyright~=1.1",
     "pytest-cov~=7.1",
     "ruff~=0.15",
+    "types-lxml~=2026.2",
 ]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.pyright]
+include = ["md2enex"]
+pythonVersion = "3.14"
+pythonPlatform = "All"
 
 [tool.ruff]
 line-length = 120

@@ -483,7 +483,7 @@ def version_callback(value: bool):
 
 @app.command(context_settings={"help_option_names": ["-h", "--help"]})
 def cli(
-    directory: Annotated[Path, typer.Argument(exists=True, file_okay=False, dir_okay=True, path_type=Path)],
+    directory: Annotated[Path, typer.Argument(exists=True, file_okay=False, dir_okay=True)],
     output: Annotated[
         Path,
         typer.Option(
@@ -491,10 +491,9 @@ def cli(
             "-o",
             exists=False,
             dir_okay=False,
-            path_type=Path,
             help="Output file name. Existing file will be overwritten.",
         ),
-    ] = "export.enex",
+    ] = Path("export.enex"),
     version: Annotated[
         bool | None,
         typer.Option("--version", "-v", callback=version_callback, help="Program version number"),
