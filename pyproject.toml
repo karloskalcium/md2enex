@@ -1,16 +1,16 @@
 [project]
 name = "md2enex"
-version = "1.0"
+version = "1.1"
 description = "Converts markdown to Evernote ENEX files so they can be imported"
 authors = [{ name = "karloskalcium" }]
-requires-python = "~=3.13"
+requires-python = "~=3.14.0"
 readme = "README.md"
 license = "MIT"
 dependencies = [
-    "lxml>=5.2.1,<6",
-    "pypandoc-binary~=1.13",
-    "typer>=0.16.0",
-    "python-frontmatter>=1.0.0,<2",
+    "lxml~=6.1",
+    "pypandoc-binary~=1.17",
+    "typer~=0.25",
+    "python-frontmatter~=1.1",
 ]
 
 [project.urls]
@@ -21,18 +21,25 @@ md2enex = "md2enex.md2enex:main"
 
 [dependency-groups]
 dev = [
-    "freezegun>=1.5.1,<2",
-    "pytest-cov>=6.1.1",
-    "ruff>=0.11.12",
+    "freezegun~=1.5.5",
+    "pyright~=1.1",
+    "pytest-cov~=7.1",
+    "ruff~=0.15",
+    "types-lxml~=2026.2",
 ]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.pyright]
+include = ["md2enex"]
+pythonVersion = "3.14"
+pythonPlatform = "All"
+
 [tool.ruff]
 line-length = 120
-target-version = "py313"
+target-version = "py314"
 
 [tool.ruff.lint]
 select = [
@@ -89,5 +96,8 @@ directory = "results/coverage"
 # Output test results to junit.xml
 addopts = "-vvv --tb=long -ra --junitxml=results/unit/pytest-unit.xml --color=yes"
 testpaths = "tests"
+filterwarnings = [
+    "ignore:codecs.open\\(\\) is deprecated:DeprecationWarning:frontmatter",
+]
 # log_cli = true
 # log_cli_level = "DEBUG"
