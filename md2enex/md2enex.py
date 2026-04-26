@@ -193,31 +193,26 @@ def extract_yaml_frontmatter(file: str) -> tuple[dict | None, str]:
         return None, content
 
 
+def _collect_tag_values(frontmatter: dict, key: str) -> list[str]:
+    """Extract tag strings from a frontmatter field (list or comma-separated string)."""
+    value = frontmatter.get(key)
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    return [t.strip() for t in str(value).split(",")]
+
+
 def create_tags_from_frontmatter(frontmatter: dict) -> list[etree.Element]:
-    """
-    Create tag elements from YAML frontmatter.
-    Looks for 'tags' or 'keywords' in the frontmatter and creates tag elements.
-    """
+    """Create ``<tag>`` elements from ``tags`` and ``keywords`` frontmatter fields."""
     tag_elements = []
-
-    tags = []
-    if frontmatter:
-        if "tags" in frontmatter:
-            if isinstance(frontmatter["tags"], list):
-                tags.extend(frontmatter["tags"])
-            else:
-                tags.extend([t.strip() for t in str(frontmatter["tags"]).split(",")])
-
-        if "keywords" in frontmatter:
-            if isinstance(frontmatter["keywords"], list):
-                tags.extend(frontmatter["keywords"])
-            else:
-                tags.extend([t.strip() for t in str(frontmatter["keywords"]).split(",")])
+    tags = _collect_tag_values(frontmatter, "tags") + _collect_tag_values(frontmatter, "keywords")
 
     for tag_text in tags:
-        if tag_text and tag_text.strip():
+        stripped = str(tag_text).strip()
+        if stripped:
             tag_el = etree.Element("tag")
-            tag_el.text = tag_text.strip()
+            tag_el.text = stripped
             tag_elements.append(tag_el)
 
     return tag_elements
