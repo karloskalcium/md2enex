@@ -13,7 +13,6 @@ import mimetypes
 import os
 import platform
 import subprocess
-from enum import Enum
 from inspect import getsourcefile
 from pathlib import Path
 from typing import Annotated
@@ -24,16 +23,11 @@ import pypandoc
 import typer
 from lxml import etree
 
+APP_NAME = "md2enex"
+APP_VERSION = importlib.metadata.version("md2enex")
 
-# Enum for App Configuration Constants with functions
-class Appconfig(Enum):
-    APP_NAME = "md2enex"
-    APP_VERSION = importlib.metadata.version("md2enex")
-
-
-class Doctypes(Enum):
-    ENEX_DOCTYPE = '<!DOCTYPE en-export SYSTEM "http://xml.evernote.com/pub/evernote-export4.dtd">'
-    ENML_DOCTYPE = '<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml3.dtd">'
+ENEX_DOCTYPE = '<!DOCTYPE en-export SYSTEM "http://xml.evernote.com/pub/evernote-export4.dtd">'
+ENML_DOCTYPE = '<!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml3.dtd">'
 
 
 # taken from here https://dev.evernote.com/doc/articles/enml.php
@@ -145,7 +139,7 @@ def create_updated_date(file: str) -> etree.Element:
 def create_tag() -> etree.Element:
     tag_el = etree.Element("tag")
     now = datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds")
-    tag_el.text = f"{Appconfig.APP_NAME.value}-import:{now}"
+    tag_el.text = f"{APP_NAME}-import:{now}"
     return tag_el
 
 
@@ -388,7 +382,7 @@ def create_note_content(file: str) -> tuple[etree.Element, list, dict | None]:
         xml_declaration=True,
         pretty_print=False,
         standalone=False,
-        doctype=Doctypes.ENML_DOCTYPE.value,
+        doctype=ENML_DOCTYPE,
     )
 
     logging.debug(f"EN Note XML: {en_note_bytes.decode('utf-8')}")
@@ -440,8 +434,8 @@ def create_en_export() -> etree.Element:
     now_str = enex_date_format(now)
     en_export = etree.Element("en-export")
     en_export.set("export-date", now_str)
-    en_export.set("application", Appconfig.APP_NAME.value)
-    en_export.set("version", Appconfig.APP_VERSION.value)
+    en_export.set("application", APP_NAME)
+    en_export.set("version", APP_VERSION)
     return en_export
 
 
@@ -475,7 +469,7 @@ def write_enex(target_directory: Path, output_file: str):
         method="xml",
         pretty_print=True,
         xml_declaration=True,
-        doctype=Doctypes.ENEX_DOCTYPE.value,
+        doctype=ENEX_DOCTYPE,
     )
 
     if error_list:
@@ -495,7 +489,7 @@ def write_enex(target_directory: Path, output_file: str):
 
 def version_callback(value: bool):
     if value:
-        typer.echo(f"{Appconfig.APP_NAME.value} (version {Appconfig.APP_VERSION.value})")
+        typer.echo(f"{APP_NAME} (version {APP_VERSION})")
         raise typer.Exit(code=0)
 
 
