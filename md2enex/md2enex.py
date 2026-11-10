@@ -444,14 +444,18 @@ def write_enex(target_directory: Path, output_file: str):
             typer.secho(f"Skipping {filename}: {type(e).__name__}: {e}", err=True, fg="yellow")
 
     tree = etree.ElementTree(root)
-    tree.write(
-        output_file,
-        encoding="UTF-8",
-        method="xml",
-        pretty_print=True,
-        xml_declaration=True,
-        doctype=ENEX_DOCTYPE,
-    )
+    try:
+        tree.write(
+            output_file,
+            encoding="UTF-8",
+            method="xml",
+            pretty_print=True,
+            xml_declaration=True,
+            doctype=ENEX_DOCTYPE,
+        )
+    except OSError as e:
+        typer.secho(f"Error: cannot write output file {output_file}: {e.strerror or e}", err=True, fg="red")
+        raise typer.Exit(code=1)
 
     if error_list:
         typer.secho(

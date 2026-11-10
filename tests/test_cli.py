@@ -85,6 +85,18 @@ def test_invalid_markdown(tmp_path):
 
 
 @freeze_time(FIXED_TIME)
+def test_unwritable_output_path(tmp_path):
+    """An output path inside a nonexistent directory should fail cleanly, not traceback."""
+    md_file = tmp_path / "note.md"
+    md_file.write_text("# Hello\n\nSome text.\n", encoding="utf-8")
+    missing = tmp_path / "no-such-dir" / "export.enex"
+    result = runner.invoke(app, [str(tmp_path), "--output", str(missing)])
+    assert result.exit_code == 1
+    assert "cannot write output file" in result.stderr
+    assert not isinstance(result.exception, OSError)
+
+
+@freeze_time(FIXED_TIME)
 def test_missing_media(tmp_path):
     """A markdown file referencing a non-existent image should warn but still succeed."""
     md_file = tmp_path / "note.md"
